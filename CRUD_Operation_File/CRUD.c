@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct userInfo
-{
+#define FILE_NAME "users.txt"
+
+typedef struct userInfo {
     unsigned int id;
     char name[26];
     unsigned  age;
 } user;
-
-#define FILE_NAME "users.txt"
 
 int getIntInput(const char *prompt) {
     char buffer[100];
