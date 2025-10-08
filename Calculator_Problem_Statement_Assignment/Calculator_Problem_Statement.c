@@ -117,13 +117,7 @@ int main()
 
     long long result = evaluateExpression(normalizedExpression);
 
-    if (result != -1)
-    {
-        printf("%lld\n", result);
-    }
-    else {
-        printf("Invalid expression please enter correct expression\n");
-    }
+    printf("%lld\n", result);
 
     return 0;
 }
