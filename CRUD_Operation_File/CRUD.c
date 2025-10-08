@@ -1,25 +1,46 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct userInfo
 {
-    int id;
+    unsigned int id;
     char name[26];
-    int age;
+    unsigned  age;
 } user;
 
-int getLastUserIndex(char fileName[])
+#define FILE_NAME "users.txt"
+
+int getIntInput(const char *prompt) {
+    char buffer[100];
+    int value;
+    while (1) {
+        printf("%s", prompt);
+        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+            buffer[strcspn(buffer, "\n")] = 0;
+
+            if (sscanf(buffer, "%d", &value) == 1) {
+                return value;
+            } else {
+                printf("Invalid input. Please enter a valid integer.\n");
+            }
+        } else {
+            printf("Error reading input. Try again.\n");
+        }
+    }
+}
+
+unsigned int getLastUserId()
 {
     int lastIdx = -1;
-    int id, age;
-    char name[26];
-    FILE *getIdx = fopen(fileName, "r");
+    user temp;
+    FILE *getIdx = fopen(FILE_NAME, "r");
     if (!getIdx)
         return 0;
 
-    while (fscanf(getIdx, "%d %s %d", &id, name, &age) == 3)
+    while (fscanf(getIdx, "%u %s %u", &temp.id, &temp.name, &temp.age) == 3)
     {
-        lastIdx = id;
+        lastIdx = temp.id;
     }
     fclose(getIdx);
 
@@ -34,185 +55,229 @@ int getLastUserIndex(char fileName[])
     return lastIdx;
 }
 
-void displayData(char fileName[])
+void displayData()
 {
-    FILE *readPtr = fopen(fileName, "r");
-    char data[50];
-
-    while (fgets(data, 50, readPtr) != NULL)
+    FILE *readPtr = fopen(FILE_NAME, "r");
+    user temp;
+    while (fscanf(readPtr, "%u %s %u", &temp.id, &temp.name, &temp.age) == 3)
     {
-        printf("%s", data);
+        printf("%u %s %u\n", temp.id, temp.name, temp.age);
     }
 
     fclose(readPtr);
 }
 
-void addUser(int id, char fileName[])
+void addUser(unsigned int id)
 {
 
     user temp;
     temp.id = id;
 
-    printf("enter age: ");
-    scanf("%d", &temp.age);
+    temp.age = getIntInput("Enter age: ");
     printf("enter name: ");
     scanf("%s", &temp.name);
 
-    FILE *writePtr = fopen(fileName, "a");
+    FILE *writePtr = fopen(FILE_NAME, "a");
 
-    // char data[] = " ";
-    // fprintf(writePtr, "%d", temp.id);
-    // fputc(data[0], writePtr);
-    // fputs(temp.name, writePtr);
-    // fputc(data[0],writePtr);
-    // fprintf(writePtr, "%d", temp.age);
-    // fputc(data[0],writePtr);
-    // fputs("\n", writePtr);
+    int isSuccess = fprintf(writePtr, "%u %s %u\n", temp.id, temp.name, temp.age);
 
-    fprintf(writePtr, "%d %s %d\n", temp.id, temp.name, temp.age);
+    if (isSuccess >= 0)
+    {
+        printf("Write success for id: %u\n", temp.id);
+    }
+    else
+    {
+        printf("Write unsuccessful for id: %u\n", temp.id);
+    }
 
     fclose(writePtr);
 }
 
-void editUser(int id, int size, char fileName[])
+void editUser()
 {
-    if (id >= size)
+    FILE *file = fopen(FILE_NAME, "r");
+    if (!file)
     {
-        printf("id is not in range\n");
+        printf("Error opening file\n");
         return;
     }
 
-    FILE *originalFile = fopen(fileName, "r");
-    FILE *tempFile = fopen("tempFile.txt", "w");
+    unsigned int id = getIntInput("Enter ID of user you want to modify: ");
 
-    if (!originalFile || !tempFile)
+    // Count users
+    int count = 0;
+    user temp;
+    while (fscanf(file, "%u %s %u", &temp.id, temp.name, &temp.age) == 3)
     {
-        printf("error opening file\n");
+        count++;
+    }
+    rewind(file);
+
+    // Load users into memory
+    user *users = (user *)malloc(count * sizeof(user));
+    if (!users)
+    {
+        printf("Memory allocation failed\n");
+        fclose(file);
         return;
     }
 
-    int uid, age;
-    char name[26];
+    int i = 0;
+    while (fscanf(file, "%u %s %u", &users[i].id, users[i].name, &users[i].age) == 3)
+    {
+        i++;
+    }
+
+    fclose(file);
+
     int isFound = 0;
 
-    while (fscanf(originalFile, "%d %s %d", &uid, name, &age) == 3)
+    for (int j = 0; j < count; j++)
     {
-        if (uid == id)
+        if (users[j].id == id)
         {
             isFound = 1;
-            printf("enter name to edit: ");
-            scanf("%s", name);
-            printf("Enter age to edit: ");
-            scanf("%d", &age);
+            printf("Enter new name: ");
+            scanf("%s", users[j].name);
+            printf("Enter new age: ");
+            scanf("%u", &users[j].age);
+            break;
         }
-        fprintf(tempFile, "%d %s %d\n", uid, name, age);
     }
-    fclose(originalFile);
-    fclose(tempFile);
 
-    remove(fileName);
-    rename("tempFile.txt", fileName);
+    if (!isFound)
+    {
+        printf("User ID %u not found\n", id);
+        free(users);
+        return;
+    }
 
-    if (isFound)
+    file = fopen(FILE_NAME, "w");
+    if (!file)
     {
-        printf("User Info Edited success\n");
+        printf("Error opening file for writing\n");
+        free(users);
+        return;
     }
-    else
+
+    for (int j = 0; j < count; j++)
     {
-        printf("Error while editing user info\n");
+        fprintf(file, "%u %s %u\n", users[j].id, users[j].name, users[j].age);
     }
+
+    fclose(file);
+    free(users);
+
+    printf("User info edited successfully\n");
 }
 
-void deleteUser(int id, int size, char fileName[])
+unsigned int deleteUser()
 {
-    if (id >= size)
+    FILE *file = fopen(FILE_NAME, "r");
+    if (!file)
     {
-        printf("id is not in range\n");
-        return;
+        printf("Error opening file\n");
+        return -1;
+    }
+    
+    unsigned int id = getIntInput("Enter ID of user you want to delete: ");
+
+    // Count users
+    int count = 0;
+    user temp;
+    while (fscanf(file, "%u %s %u", &temp.id, temp.name, &temp.age) == 3)
+    {
+        count++;
+    }
+    rewind(file);
+
+    user *users = (user *)malloc(count * sizeof(user));
+    if (!users)
+    {
+        printf("Memory allocation failed\n");
+        fclose(file);
+        return -1;
     }
 
-    FILE *originalFile = fopen(fileName, "r");
-    FILE *tempFile = fopen("tempFile.txt", "w");
-
-    if (!originalFile || !tempFile)
+    int i = 0;
+    while (fscanf(file, "%u %s %u", &users[i].id, users[i].name, &users[i].age) == 3)
     {
-        printf("error opening file\n");
-        return;
+        i++;
     }
+    fclose(file);
 
-    int uid, age;
-    char name[26];
     int isFound = 0;
 
-    while (fscanf(originalFile, "%d %s %d", &uid, name, &age) == 3)
+    file = fopen(FILE_NAME, "w");
+    if (!file)
     {
-        if (uid != id)
+        printf("Error opening file for writing\n");
+        free(users);
+        return -1;
+    }
+
+    for (int j = 0; j < count; j++)
+    {
+        if (users[j].id != id)
+        {
+            fprintf(file, "%u %s %u\n", users[j].id, users[j].name, users[j].age);
+        }
+        else
         {
             isFound = 1;
-            fprintf(tempFile, "%d %s %d\n", uid, name, age);
         }
     }
-    fclose(originalFile);
-    fclose(tempFile);
 
-    remove(fileName);
-    rename("tempFile.txt", fileName);
+    fclose(file);
+    free(users);
 
     if (isFound)
     {
         printf("User Deleted successfully\n");
+        return getLastUserId(FILE_NAME);
     }
     else
     {
-        printf("Error while deleting user info\n");
+        printf("User ID %u not found\n", id);
     }
 }
 
 int main()
 {
-    FILE *fptr;
-    char name[] = "users.txt";
-
-    int id = getLastUserIndex(name);
-    printf("%d\n", id);
+    unsigned int id = getLastUserId();
 
     while (1)
     {
         printf("Choose Operation:\n1. Display all users\n2. Add a new user\n3. Modify user details\n4. Delete a user\n0. exit\n");
 
-        int ch;
-        scanf("%d", &ch);
+        int ch = getIntInput("Enter your choice: ");
 
         switch (ch)
         {
         case 1:
-            displayData(name);
+            displayData();
             break;
 
         case 2:
-            addUser(id++, name);
+            addUser(id++);
             break;
 
         case 3:
         {
-            int uid;
-            printf("enter id of user you want to modify: ");
-            scanf("%d", &uid);
-            editUser(uid, id, name);
+            editUser();
             break;
         }
 
         case 4:
         {
-            int uid;
-            printf("enter id of user you want to delete: ");
-            scanf("%d", &uid);
-            deleteUser(uid, id, name);
+            int tempId = deleteUser();
+            if(tempId!=-1) {
+                id=tempId;
+            }
             break;
         }
 
         case 0:
-            // fclose(fptr);
             exit(0);
             break;
 
