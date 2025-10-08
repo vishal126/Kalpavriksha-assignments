@@ -1,21 +1,22 @@
 #include <stdio.h>
+#include <ctype.h>
 
-#define size 100
+#define SIZE 100
 
-int calculation(char *expr)
+int evaluateExpression(char *expr)
 {
     int lastOpIdx = -1;
-    int res = 0;
-    int term = 0;
+    long long res = 0;
+    long long term = 0;
     char prevOp = '+';
     int i = 0;
 
     while (expr[i] != '\0')
     {
-        if (expr[i] >= '0' && expr[i] <= '9')
+        if (isdigit(expr[i]))
         {
-            int operand = 0;
-            while (expr[i] >= '0' && expr[i] <= '9')
+            long long operand = 0;
+            while (isdigit(expr[i]))
             {
                 operand = operand * 10 + (expr[i] - '0');
                 i++;
@@ -79,36 +80,49 @@ int calculation(char *expr)
 
 int main()
 {
-    char expression[size];
-    int i = 0, isCorrect = 1;
+    char expression[SIZE];
+
     printf("enter your expression\npress enter to end your input: ");
+    fgets(expression, SIZE, stdin);
+
+    char normalizedExpression[SIZE];
+    int j=0;
+
+    int i = 0, isCorrect = 1;
     char ch;
-    while (i < size - 1)
+
+    while (expression[i] != '\0')
     {
-        ch = getchar();
-        if (ch == '\n')
-        {
-            break;
-        }
-        if (ch == ' ')
+        ch = expression[i];
+        if (isspace(ch)) {
+            i++;
             continue;
-        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+        }
+        if (isalpha(ch))
             isCorrect = 0;
-        expression[i++] = ch;
+            
+        normalizedExpression[j++] = ch;
+        i++;
     }
-    expression[i] = '\0';
-    printf("%s\n", expression);
+
+    normalizedExpression[i] = '\0';
+
+    printf("%s\n", normalizedExpression);
+
     if (!isCorrect)
     {
         printf("invalid string\n");
         return 0;
     }
 
-    int result = calculation(expression);
+    long long result = evaluateExpression(normalizedExpression);
 
     if (result != -1)
     {
-        printf("%d\n", result);
+        printf("%lld\n", result);
+    }
+    else {
+        printf("Invalid expression please enter correct expression\n");
     }
 
     return 0;
