@@ -7,7 +7,7 @@
 typedef struct userInfo {
     unsigned int id;
     char name[26];
-    unsigned  age;
+    unsigned int age;
 } user;
 
 int getIntInput(const char *prompt) {
