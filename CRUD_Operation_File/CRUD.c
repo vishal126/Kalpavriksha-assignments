@@ -7,7 +7,7 @@
 typedef struct userInfo {
     unsigned int id;
     char name[26];
-    unsigned int age;
+    unsigned short int age;
 } user;
 
 int getIntInput(const char *prompt) {
@@ -37,7 +37,7 @@ unsigned int getLastUserId()
     if (!getIdx)
         return 0;
 
-    while (fscanf(getIdx, "%u %s %u", &temp.id, &temp.name, &temp.age) == 3)
+    while (fscanf(getIdx, "%u %s %hu", &temp.id, &temp.name, &temp.age) == 3)
     {
         lastIdx = temp.id;
     }
@@ -58,9 +58,9 @@ void displayData()
 {
     FILE *readPtr = fopen(FILE_NAME, "r");
     user temp;
-    while (fscanf(readPtr, "%u %s %u", &temp.id, &temp.name, &temp.age) == 3)
+    while (fscanf(readPtr, "%u %s %hu", &temp.id, &temp.name, &temp.age) == 3)
     {
-        printf("%u %s %u\n", temp.id, temp.name, temp.age);
+        printf("%u %s %hu\n", temp.id, temp.name, temp.age);
     }
 
     fclose(readPtr);
@@ -78,7 +78,7 @@ void addUser(unsigned int id)
 
     FILE *writePtr = fopen(FILE_NAME, "a");
 
-    int isSuccess = fprintf(writePtr, "%u %s %u\n", temp.id, temp.name, temp.age);
+    int isSuccess = fprintf(writePtr, "%u %s %hu\n", temp.id, temp.name, temp.age);
 
     if (isSuccess >= 0)
     {
@@ -106,7 +106,7 @@ void editUser()
     // Count users
     int count = 0;
     user temp;
-    while (fscanf(file, "%u %s %u", &temp.id, temp.name, &temp.age) == 3)
+    while (fscanf(file, "%u %s %hu", &temp.id, temp.name, &temp.age) == 3)
     {
         count++;
     }
@@ -122,7 +122,7 @@ void editUser()
     }
 
     int i = 0;
-    while (fscanf(file, "%u %s %u", &users[i].id, users[i].name, &users[i].age) == 3)
+    while (fscanf(file, "%u %s %hu", &users[i].id, users[i].name, &users[i].age) == 3)
     {
         i++;
     }
@@ -139,7 +139,7 @@ void editUser()
             printf("Enter new name: ");
             scanf("%s", users[j].name);
             printf("Enter new age: ");
-            scanf("%u", &users[j].age);
+            scanf("%hu", &users[j].age);
             break;
         }
     }
@@ -161,7 +161,7 @@ void editUser()
 
     for (int j = 0; j < count; j++)
     {
-        fprintf(file, "%u %s %u\n", users[j].id, users[j].name, users[j].age);
+        fprintf(file, "%u %s %hu\n", users[j].id, users[j].name, users[j].age);
     }
 
     fclose(file);
@@ -184,7 +184,7 @@ unsigned int deleteUser()
     // Count users
     int count = 0;
     user temp;
-    while (fscanf(file, "%u %s %u", &temp.id, temp.name, &temp.age) == 3)
+    while (fscanf(file, "%u %s %hu", &temp.id, temp.name, &temp.age) == 3)
     {
         count++;
     }
@@ -199,7 +199,7 @@ unsigned int deleteUser()
     }
 
     int i = 0;
-    while (fscanf(file, "%u %s %u", &users[i].id, users[i].name, &users[i].age) == 3)
+    while (fscanf(file, "%u %s %hu", &users[i].id, users[i].name, &users[i].age) == 3)
     {
         i++;
     }
@@ -219,7 +219,7 @@ unsigned int deleteUser()
     {
         if (users[j].id != id)
         {
-            fprintf(file, "%u %s %u\n", users[j].id, users[j].name, users[j].age);
+            fprintf(file, "%u %s %hu\n", users[j].id, users[j].name, users[j].age);
         }
         else
         {
