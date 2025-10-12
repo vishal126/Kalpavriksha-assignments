@@ -62,13 +62,11 @@ void getStudentDetailsInput(student *studentsArray, int numberOfStudents)
         }
         else
         {
-            if ((studentsArray[i].studentMarks[0] < 0 || studentsArray[i].studentMarks[0] > 100) ||
-                (studentsArray[i].studentMarks[1] < 0 || studentsArray[i].studentMarks[1] > 100) ||
-                (studentsArray[i].studentMarks[2] < 0 || studentsArray[i].studentMarks[2] > 100))
-
+            if (strlen(studentDetailsInputBuffer) <= 1)
             {
-                printf("marks are not in range input correct marks within range 0-100\n");
+                printf("Empty input. Please enter valid details.\n");
                 i--;
+                continue;
             }
         }
     }
@@ -145,23 +143,43 @@ void printStudentDetails(student *studentDetailsArray, int numberofStudents)
         printf("Average: %.2f\n", studentDetailsArray[studentDetailsArrayCounter].averageMarks);
         printf("Grade: %c\n", studentDetailsArray[studentDetailsArrayCounter].grade);
 
-        if (studentDetailsArray[studentDetailsArrayCounter].grade != 'F')
+        if (studentDetailsArray[studentDetailsArrayCounter].grade == 'F')
         {
-            printf("Performance: %s\n", studentDetailsArray[studentDetailsArrayCounter].stars);
+            continue;
         }
-
+        printf("Performance: %s\n", studentDetailsArray[studentDetailsArrayCounter].stars);
         printf("\n");
     }
 
+    printf("\n");
+    
     printf("List of Roll Numbers (via recursion): ");
     printStudentsRollNumber(studentDetailsArray, 0, numberofStudents);
+    printf("\n");
 }
 
 int main()
 {
     unsigned int numberOfStudents = getIntInput("Enter the number of students you want to enter details for: ");
 
+    while (1)
+    {
+        if (numberOfStudents >= 1 && numberOfStudents <= 100)
+        {
+            break;
+        }
+        else
+        {
+            numberOfStudents = getIntInput("Enter the number of students between 1 to 100:   ");
+        }
+    }
     student *studentsArray = (student *)malloc(numberOfStudents * sizeof(student));
+
+    if (studentsArray == NULL)
+    {
+        printf("Dynamic memory allocation failed.");
+        return 1;
+    }
 
     getStudentDetailsInput(studentsArray, numberOfStudents);
 
