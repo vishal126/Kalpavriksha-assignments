@@ -62,11 +62,13 @@ void getStudentDetailsInput(student *studentsArray, int numberOfStudents)
         }
         else
         {
-            if (strlen(studentDetailsInputBuffer) <= 1)
+            if ((studentsArray[i].studentMarks[0] > 100) ||
+                (studentsArray[i].studentMarks[1] > 100) ||
+                (studentsArray[i].studentMarks[2] > 100))
+
             {
-                printf("Empty input. Please enter valid details.\n");
+                printf("marks are not in range input correct marks within range 0-100\n");
                 i--;
-                continue;
             }
         }
     }
