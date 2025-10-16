@@ -171,21 +171,21 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     unsigned short *currRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
 
     for (unsigned short j = 0; j < sizeOfMatrix; j++)
-        prevRow[j] = sonarMatrix[j];
+        *(prevRow + j) = *(sonarMatrix + j);
 
     for (unsigned short i = 0; i < sizeOfMatrix; i++)
     {
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
-            currRow[j] = sonarMatrix[i * sizeOfMatrix + j];
+            *(currRow + j) = *(sonarMatrix + (i * sizeOfMatrix) + j);
 
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
         {
             unsigned short average = getAverage(prevRow, currRow, sonarMatrix, sizeOfMatrix, i, j);
-            sonarMatrix[i * sizeOfMatrix + j] = average;
+            *(sonarMatrix + (i * sizeOfMatrix) + j) = average;
         }
 
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
-            prevRow[j] = currRow[j];
+            *(prevRow + j) = *(currRow + j);
     }
 
     free(prevRow);
@@ -222,8 +222,8 @@ int main()
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
         {
             printf("enter value of element [%hu][%hu] in between 0-255: ", i, j);
-            sonarImageMatrix[i * sizeOfMatrix + j] = getIntInput("");
-            if (sonarImageMatrix[i * sizeOfMatrix + j] > 255 || sonarImageMatrix[i * sizeOfMatrix + j] < 0)
+            *(sonarImageMatrix + (i * sizeOfMatrix) + j) = getIntInput("");
+            if (*(sonarImageMatrix + (i * sizeOfMatrix) + j) > 255 || *(sonarImageMatrix + (i * sizeOfMatrix) + j) < 0)
             {
                 printf("value is not in range 0-255, enter correct value\n");
                 j--;
@@ -236,7 +236,7 @@ int main()
     {
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
         {
-            printf("%hu ", sonarImageMatrix[i * sizeOfMatrix + j]);
+            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
         }
         printf("\n");
     }
@@ -247,7 +247,7 @@ int main()
     {
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
         {
-            printf("%hu ", sonarImageMatrix[i * sizeOfMatrix + j]);
+            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
         }
         printf("\n");
     }
@@ -259,7 +259,7 @@ int main()
     {
         for (unsigned short j = 0; j < sizeOfMatrix; j++)
         {
-            printf("%hu ", sonarImageMatrix[i * sizeOfMatrix + j]);
+            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
         }
         printf("\n");
     }
