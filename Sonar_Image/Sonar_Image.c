@@ -39,9 +39,9 @@ void swap(unsigned short *swapElement1, unsigned short *swapElement2)
 void reverseMatrix(unsigned short *transposedMatrix, unsigned short sizeOfMatrix)
 {
 
-    for (int i = 0; i < sizeOfMatrix; i++)
+    for (int rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        unsigned short *matrixStart = transposedMatrix + i * sizeOfMatrix;
+        unsigned short *matrixStart = transposedMatrix + rowIndex * sizeOfMatrix;
         unsigned short *matrixEnd = matrixStart + sizeOfMatrix - 1;
 
         while (matrixStart < matrixEnd)
@@ -55,24 +55,24 @@ void reverseMatrix(unsigned short *transposedMatrix, unsigned short sizeOfMatrix
 
 void rotateMatrix(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
 {
-    for (unsigned short i = 0; i < sizeOfMatrix - 1; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix - 1; rowIndex++)
     {
-        for (unsigned short j = i + 1; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = rowIndex + 1; colIndex < sizeOfMatrix; colIndex++)
         {
-            swap(sonarMatrix + (i * sizeOfMatrix + j), sonarMatrix + (j * sizeOfMatrix + i));
+            swap(sonarMatrix + (rowIndex * sizeOfMatrix + colIndex), sonarMatrix + (colIndex * sizeOfMatrix + rowIndex));
         }
     }
 
     reverseMatrix(sonarMatrix, sizeOfMatrix);
 }
 
-unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatrix, unsigned short *sonarMatrix, unsigned short sizeOfMatrix, unsigned short i, unsigned short j)
+unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatrix, unsigned short *sonarMatrix, unsigned short sizeOfMatrix, unsigned short rowIndex, unsigned short colIndex)
 {
     unsigned short sum = 0;
     unsigned short count = 0;
-    if (i == 0)
+    if (rowIndex == 0)
     {
-        if (j == 0)
+        if (colIndex == 0)
         {
             sum = *(prevRow) +
                   *(prevRow + 1) +
@@ -80,85 +80,85 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
                   *(sonarMatrix + sizeOfMatrix + 1);
             count = 4;
         }
-        else if (j == sizeOfMatrix - 1)
+        else if (colIndex == sizeOfMatrix - 1)
         {
-            sum = *(prevRow + j) +
-                  *(prevRow + j - 1) +
-                  *(sonarMatrix + sizeOfMatrix + j) +
-                  *(sonarMatrix + sizeOfMatrix + j - 1);
+            sum = *(prevRow + colIndex) +
+                  *(prevRow + colIndex - 1) +
+                  *(sonarMatrix + sizeOfMatrix + colIndex) +
+                  *(sonarMatrix + sizeOfMatrix + colIndex - 1);
             count = 4;
         }
         else
         {
-            sum = *(prevRow + j) +
-                  *(prevRow + j - 1) +
-                  *(prevRow + j + 1) +
-                  *(sonarMatrix + sizeOfMatrix + j) +
-                  *(sonarMatrix + sizeOfMatrix + j + 1) +
-                  *(sonarMatrix + sizeOfMatrix + j - 1);
+            sum = *(prevRow + colIndex) +
+                  *(prevRow + colIndex - 1) +
+                  *(prevRow + colIndex + 1) +
+                  *(sonarMatrix + sizeOfMatrix + colIndex) +
+                  *(sonarMatrix + sizeOfMatrix + colIndex + 1) +
+                  *(sonarMatrix + sizeOfMatrix + colIndex - 1);
             count = 6;
         }
     }
-    else if (i == sizeOfMatrix - 1)
+    else if (rowIndex == sizeOfMatrix - 1)
     {
-        if (j == 0)
+        if (colIndex == 0)
         {
-            sum = *(sonarMatrix + (i * sizeOfMatrix)) +
-                  *(sonarMatrix + (i * sizeOfMatrix) + 1) +
+            sum = *(sonarMatrix + (rowIndex * sizeOfMatrix)) +
+                  *(sonarMatrix + (rowIndex * sizeOfMatrix) + 1) +
                   *(prevRow) +
                   *(prevRow + 1);
             count = 4;
         }
-        else if (j == sizeOfMatrix - 1)
+        else if (colIndex == sizeOfMatrix - 1)
         {
-            sum = *(sonarMatrix + (i * sizeOfMatrix) + j) +
-                  *(tempCurrMatrix + (j - 1)) +
-                  *(prevRow + j) +
-                  *(prevRow + (j - 1));
+            sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
+                  *(tempCurrMatrix + (colIndex - 1)) +
+                  *(prevRow + colIndex) +
+                  *(prevRow + (colIndex - 1));
             count = 4;
         }
         else
         {
-            sum = *(sonarMatrix + (i * sizeOfMatrix) + j) +
-                  *(tempCurrMatrix + (j - 1)) +
-                  *(sonarMatrix + (i * sizeOfMatrix) + (j + 1)) +
-                  *(prevRow + j) +
-                  *(prevRow + (j - 1)) +
-                  *(prevRow + (j + 1));
+            sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
+                  *(tempCurrMatrix + (colIndex - 1)) +
+                  *(sonarMatrix + (rowIndex * sizeOfMatrix) + (colIndex + 1)) +
+                  *(prevRow + colIndex) +
+                  *(prevRow + (colIndex - 1)) +
+                  *(prevRow + (colIndex + 1));
             count = 6;
         }
     }
-    else if (j == 0)
+    else if (colIndex == 0)
     {
-        sum = *(sonarMatrix + (i * sizeOfMatrix)) +
-              *(sonarMatrix + (i * sizeOfMatrix) + 1) +
+        sum = *(sonarMatrix + (rowIndex * sizeOfMatrix)) +
+              *(sonarMatrix + (rowIndex * sizeOfMatrix) + 1) +
               *(prevRow) +
               *(prevRow + 1) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix)) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + 1);
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix)) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + 1);
         count = 6;
     }
-    else if (j == sizeOfMatrix - 1)
+    else if (colIndex == sizeOfMatrix - 1)
     {
-        sum = *(sonarMatrix + (i * sizeOfMatrix) + j) +
-              *(tempCurrMatrix + (j - 1)) +
-              *(prevRow + j) +
-              *(prevRow + (j - 1)) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + j) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + (j - 1));
+        sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
+              *(tempCurrMatrix + (colIndex - 1)) +
+              *(prevRow + colIndex) +
+              *(prevRow + (colIndex - 1)) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + colIndex) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex - 1));
         count = 6;
     }
     else
     {
-        sum = *(sonarMatrix + (i * sizeOfMatrix) + j) +
-              *(tempCurrMatrix + (j - 1)) +
-              *(sonarMatrix + (i * sizeOfMatrix) + (j + 1)) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + (j)) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + (j - 1)) +
-              *(sonarMatrix + ((i + 1) * sizeOfMatrix) + (j + 1)) +
-              *(prevRow + (j)) +
-              *(prevRow + (j - 1)) +
-              *(prevRow + (j + 1));
+        sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
+              *(tempCurrMatrix + (colIndex - 1)) +
+              *(sonarMatrix + (rowIndex * sizeOfMatrix) + (colIndex + 1)) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex)) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex - 1)) +
+              *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex + 1)) +
+              *(prevRow + (colIndex)) +
+              *(prevRow + (colIndex - 1)) +
+              *(prevRow + (colIndex + 1));
         count = 9;
     }
 
@@ -170,22 +170,22 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     unsigned short *prevRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
     unsigned short *currRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
 
-    for (unsigned short j = 0; j < sizeOfMatrix; j++)
-        *(prevRow + j) = *(sonarMatrix + j);
+    for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
+        *(prevRow + colIndex) = *(sonarMatrix + colIndex);
 
-    for (unsigned short i = 0; i < sizeOfMatrix; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
-            *(currRow + j) = *(sonarMatrix + (i * sizeOfMatrix) + j);
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
+            *(currRow + colIndex) = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex);
 
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            unsigned short average = getAverage(prevRow, currRow, sonarMatrix, sizeOfMatrix, i, j);
-            *(sonarMatrix + (i * sizeOfMatrix) + j) = average;
+            unsigned short average = getAverage(prevRow, currRow, sonarMatrix, sizeOfMatrix, rowIndex, colIndex);
+            *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) = average;
         }
 
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
-            *(prevRow + j) = *(currRow + j);
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
+            *(prevRow + colIndex) = *(currRow + colIndex);
     }
 
     free(prevRow);
@@ -217,37 +217,37 @@ int main()
         return 1;
     }
 
-    for (unsigned short i = 0; i < sizeOfMatrix; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            printf("enter value of element [%hu][%hu] in between 0-255: ", i, j);
-            *(sonarImageMatrix + (i * sizeOfMatrix) + j) = getIntInput("");
-            if (*(sonarImageMatrix + (i * sizeOfMatrix) + j) > 255 || *(sonarImageMatrix + (i * sizeOfMatrix) + j) < 0)
+            printf("enter value of element [%hu][%hu] in between 0-255: ", rowIndex, colIndex);
+            *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) = getIntInput("");
+            if (*(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) > 255 || *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) < 0)
             {
                 printf("value is not in range 0-255, enter correct value\n");
-                j--;
+                colIndex--;
             }
         }
     }
 
     printf("\nOriginal\n");
-    for (unsigned short i = 0; i < sizeOfMatrix; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
+            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
         }
         printf("\n");
     }
 
     rotateMatrix(sonarImageMatrix, sizeOfMatrix);
     printf("\nRotated:\n");
-    for (unsigned short i = 0; i < sizeOfMatrix; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
+            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
         }
         printf("\n");
     }
@@ -255,11 +255,11 @@ int main()
     smoothingFilter(sonarImageMatrix, sizeOfMatrix);
 
     printf("\nFinal Output\n");
-    for (unsigned short i = 0; i < sizeOfMatrix; i++)
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short j = 0; j < sizeOfMatrix; j++)
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            printf("%hu ", *(sonarImageMatrix + (i * sizeOfMatrix) + j));
+            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
         }
         printf("\n");
     }
