@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 unsigned short int getIntInput(const char *prompt)
 {
@@ -217,17 +218,14 @@ int main()
         return 1;
     }
 
+    srand(time(NULL));
+
     for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
         for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
-            printf("enter value of element [%hu][%hu] in between 0-255: ", rowIndex, colIndex);
-            *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) = getIntInput("");
-            if (*(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) > 255 || *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) < 0)
-            {
-                printf("value is not in range 0-255, enter correct value\n");
-                colIndex--;
-            }
+            int randomMatrixInput = rand() % 256;
+            *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex) = (unsigned short)randomMatrixInput;
         }
     }
 
