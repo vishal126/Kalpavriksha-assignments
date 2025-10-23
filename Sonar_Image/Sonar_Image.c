@@ -193,6 +193,17 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     free(currRow);
 }
 
+void printMatrix(unsigned short *sonarMatrix, unsigned short sizeOfMatrix) {
+    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
+    {
+        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
+        {
+            printf("%hu ", *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex));
+        }
+        printf("\n");
+    }
+}
+
 int main()
 {
     unsigned short int sizeOfMatrix;
@@ -230,37 +241,16 @@ int main()
     }
 
     printf("\nOriginal\n");
-    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
-    {
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-        {
-            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
-        }
-        printf("\n");
-    }
+    printMatrix(sonarImageMatrix, sizeOfMatrix);
 
     rotateMatrix(sonarImageMatrix, sizeOfMatrix);
     printf("\nRotated:\n");
-    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
-    {
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-        {
-            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
-        }
-        printf("\n");
-    }
+    printMatrix(sonarImageMatrix, sizeOfMatrix);
 
     smoothingFilter(sonarImageMatrix, sizeOfMatrix);
 
     printf("\nFinal Output\n");
-    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
-    {
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-        {
-            printf("%hu ", *(sonarImageMatrix + (rowIndex * sizeOfMatrix) + colIndex));
-        }
-        printf("\n");
-    }
+    printMatrix(sonarImageMatrix, sizeOfMatrix);
 
     free(sonarImageMatrix);
 }
