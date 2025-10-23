@@ -75,25 +75,25 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
     {
         if (colIndex == 0)
         {
-            sum = *(prevRow) +
-                  *(prevRow + 1) +
+            sum = *(tempCurrMatrix) +
+                  *(sonarMatrix + 1) +
                   *(sonarMatrix + sizeOfMatrix) +
                   *(sonarMatrix + sizeOfMatrix + 1);
             count = 4;
         }
         else if (colIndex == sizeOfMatrix - 1)
         {
-            sum = *(prevRow + colIndex) +
-                  *(prevRow + colIndex - 1) +
+            sum = *(sonarMatrix + colIndex) +
+                  *(tempCurrMatrix + colIndex - 1) +
                   *(sonarMatrix + sizeOfMatrix + colIndex) +
                   *(sonarMatrix + sizeOfMatrix + colIndex - 1);
             count = 4;
         }
         else
         {
-            sum = *(prevRow + colIndex) +
-                  *(prevRow + colIndex - 1) +
-                  *(prevRow + colIndex + 1) +
+            sum = *(sonarMatrix + colIndex) +
+                  *(tempCurrMatrix + colIndex - 1) +
+                  *(sonarMatrix + colIndex + 1) +
                   *(sonarMatrix + sizeOfMatrix + colIndex) +
                   *(sonarMatrix + sizeOfMatrix + colIndex + 1) +
                   *(sonarMatrix + sizeOfMatrix + colIndex - 1);
@@ -173,13 +173,6 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
 
     for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-
-        if (rowIndex == 0)
-        {
-            for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-                *(prevRow + colIndex) = *(sonarMatrix + colIndex);
-        }
-
         for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
             *(currRow + colIndex) = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex);
