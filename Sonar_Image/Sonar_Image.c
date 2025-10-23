@@ -67,7 +67,7 @@ void rotateMatrix(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     reverseMatrix(sonarMatrix, sizeOfMatrix);
 }
 
-unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatrix, unsigned short *sonarMatrix, unsigned short sizeOfMatrix, unsigned short rowIndex, unsigned short colIndex)
+unsigned short getAverage(unsigned short *prevRow, unsigned short *currRow, unsigned short *sonarMatrix, unsigned short sizeOfMatrix, unsigned short rowIndex, unsigned short colIndex)
 {
     unsigned short sum = 0;
     unsigned short count = 0;
@@ -75,7 +75,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
     {
         if (colIndex == 0)
         {
-            sum = *(tempCurrMatrix) +
+            sum = *(currRow) +
                   *(sonarMatrix + 1) +
                   *(sonarMatrix + sizeOfMatrix) +
                   *(sonarMatrix + sizeOfMatrix + 1);
@@ -84,7 +84,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
         else if (colIndex == sizeOfMatrix - 1)
         {
             sum = *(sonarMatrix + colIndex) +
-                  *(tempCurrMatrix + colIndex - 1) +
+                  *(currRow + colIndex - 1) +
                   *(sonarMatrix + sizeOfMatrix + colIndex) +
                   *(sonarMatrix + sizeOfMatrix + colIndex - 1);
             count = 4;
@@ -92,7 +92,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
         else
         {
             sum = *(sonarMatrix + colIndex) +
-                  *(tempCurrMatrix + colIndex - 1) +
+                  *(currRow + colIndex - 1) +
                   *(sonarMatrix + colIndex + 1) +
                   *(sonarMatrix + sizeOfMatrix + colIndex) +
                   *(sonarMatrix + sizeOfMatrix + colIndex + 1) +
@@ -113,7 +113,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
         else if (colIndex == sizeOfMatrix - 1)
         {
             sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
-                  *(tempCurrMatrix + (colIndex - 1)) +
+                  *(currRow + (colIndex - 1)) +
                   *(prevRow + colIndex) +
                   *(prevRow + (colIndex - 1));
             count = 4;
@@ -121,7 +121,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
         else
         {
             sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
-                  *(tempCurrMatrix + (colIndex - 1)) +
+                  *(currRow + (colIndex - 1)) +
                   *(sonarMatrix + (rowIndex * sizeOfMatrix) + (colIndex + 1)) +
                   *(prevRow + colIndex) +
                   *(prevRow + (colIndex - 1)) +
@@ -142,7 +142,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
     else if (colIndex == sizeOfMatrix - 1)
     {
         sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
-              *(tempCurrMatrix + (colIndex - 1)) +
+              *(currRow + (colIndex - 1)) +
               *(prevRow + colIndex) +
               *(prevRow + (colIndex - 1)) +
               *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + colIndex) +
@@ -152,7 +152,7 @@ unsigned short getAverage(unsigned short *prevRow, unsigned short *tempCurrMatri
     else
     {
         sum = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) +
-              *(tempCurrMatrix + (colIndex - 1)) +
+              *(currRow + (colIndex - 1)) +
               *(sonarMatrix + (rowIndex * sizeOfMatrix) + (colIndex + 1)) +
               *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex)) +
               *(sonarMatrix + ((rowIndex + 1) * sizeOfMatrix) + (colIndex - 1)) +
@@ -171,6 +171,14 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     unsigned short *prevRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
     unsigned short *currRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
 
+    if (!prevRow || !currRow)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(prevRow);
+        free(currRow);
+        return;
+    }
+
     for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
         for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
@@ -181,7 +189,6 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
         }
 
         memcpy(prevRow, currRow, sizeOfMatrix * sizeof(unsigned short));
-
     }
 
     free(prevRow);
@@ -194,7 +201,7 @@ void printMatrix(unsigned short *matrix, unsigned short n, const char *label)
     for (unsigned short row = 0; row < n; row++)
     {
         for (unsigned short col = 0; col < n; col++)
-            printf("%hu ", *(matrix + row * n + col));
+            printf("%3hu ", *(matrix + row * n + col));
         printf("\n");
     }
 }
