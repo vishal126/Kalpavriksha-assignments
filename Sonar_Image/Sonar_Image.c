@@ -171,35 +171,37 @@ void smoothingFilter(unsigned short *sonarMatrix, unsigned short sizeOfMatrix)
     unsigned short *prevRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
     unsigned short *currRow = (unsigned short *)malloc(sizeOfMatrix * sizeof(unsigned short));
 
-    for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-        *(prevRow + colIndex) = *(sonarMatrix + colIndex);
-
     for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
     {
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-            *(currRow + colIndex) = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex);
+
+        if (rowIndex == 0)
+        {
+            for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
+                *(prevRow + colIndex) = *(sonarMatrix + colIndex);
+        }
 
         for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
         {
+            *(currRow + colIndex) = *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex);
             unsigned short average = getAverage(prevRow, currRow, sonarMatrix, sizeOfMatrix, rowIndex, colIndex);
             *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex) = average;
         }
 
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-            *(prevRow + colIndex) = *(currRow + colIndex);
+        memcpy(prevRow, currRow, sizeOfMatrix * sizeof(unsigned short));
+
     }
 
     free(prevRow);
     free(currRow);
 }
 
-void printMatrix(unsigned short *sonarMatrix, unsigned short sizeOfMatrix) {
-    for (unsigned short rowIndex = 0; rowIndex < sizeOfMatrix; rowIndex++)
+void printMatrix(unsigned short *matrix, unsigned short n, const char *label)
+{
+    printf("\n%s\n", label);
+    for (unsigned short row = 0; row < n; row++)
     {
-        for (unsigned short colIndex = 0; colIndex < sizeOfMatrix; colIndex++)
-        {
-            printf("%hu ", *(sonarMatrix + (rowIndex * sizeOfMatrix) + colIndex));
-        }
+        for (unsigned short col = 0; col < n; col++)
+            printf("%hu ", *(matrix + row * n + col));
         printf("\n");
     }
 }
@@ -240,17 +242,15 @@ int main()
         }
     }
 
-    printf("\nOriginal\n");
-    printMatrix(sonarImageMatrix, sizeOfMatrix);
+    printMatrix(sonarImageMatrix, sizeOfMatrix, "Original");
 
     rotateMatrix(sonarImageMatrix, sizeOfMatrix);
-    printf("\nRotated:\n");
-    printMatrix(sonarImageMatrix, sizeOfMatrix);
+
+    printMatrix(sonarImageMatrix, sizeOfMatrix, "Rotated");
 
     smoothingFilter(sonarImageMatrix, sizeOfMatrix);
 
-    printf("\nFinal Output\n");
-    printMatrix(sonarImageMatrix, sizeOfMatrix);
+    printMatrix(sonarImageMatrix, sizeOfMatrix, "Final Output");
 
     free(sonarImageMatrix);
 }
