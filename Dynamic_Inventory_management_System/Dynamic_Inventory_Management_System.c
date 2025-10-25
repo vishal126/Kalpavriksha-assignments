@@ -219,9 +219,15 @@ void printAllProducts(product *products)
 
 void updateQuantity(product *products)
 {
+    if (products == NULL || productsCount == 0)
+    {
+        printf("No products available.\n\n");
+        return;
+    }
+
     unsigned short id = (unsigned short)getIntInput("Enter Product ID to update quantity: ");
     unsigned int quantity = getQuantity("Enter new Quantity: ");
-
+    
     for (int i = 0; i < productsCount; i++)
     {
         if (products[i].productId == id)
@@ -237,6 +243,12 @@ void updateQuantity(product *products)
 
 void searchProductById(product *products)
 {
+    if (products == NULL || productsCount == 0)
+    {
+        printf("No products available.\n\n");
+        return;
+    }
+
     unsigned short id = (unsigned short)getIntInput("Enter Product ID to search: ");
 
     for (int i = 0; i < productsCount; i++)
@@ -253,6 +265,12 @@ void searchProductById(product *products)
 
 void searchProductByName(product *products)
 {
+    if (products == NULL || productsCount == 0)
+    {
+        printf("No products available.\n\n");
+        return;
+    }
+
     char productNameToSearch[50];
     getName(productNameToSearch, "Enter name to search (partial allowed): ");
 
@@ -285,6 +303,12 @@ void searchProductByName(product *products)
 
 void searchProductByPriceRange(product *products)
 {
+    if (products == NULL || productsCount == 0)
+    {
+        printf("No products available.\n\n");
+        return;
+    }
+
     float minimumPrice = getFloatInput("Enter minimum price: ");
     float maximumPrice = getFloatInput("Enter maximum price: ");
 
@@ -300,6 +324,12 @@ void searchProductByPriceRange(product *products)
 
 product *deleteProductById(product *products, unsigned short *initialProducts)
 {
+    if (products == NULL || productsCount == 0)
+    {
+        printf("No products available.\n\n");
+        return NULL;
+    }
+
     unsigned short idToDelete = getIntInput("Enter Product ID to delete: ");
 
     for (int i = 0; i < productsCount; i++)
