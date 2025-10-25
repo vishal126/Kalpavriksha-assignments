@@ -154,7 +154,7 @@ unsigned int getQuantity(char *prompt)
 {
     unsigned int quantity = getIntInput(prompt);
 
-    while (quantity < 0 || quantity > 1000000)
+    while (quantity > 1000000)
     {
         printf("enter quantity in range 0-1000000\n");
         quantity = getIntInput(prompt);
