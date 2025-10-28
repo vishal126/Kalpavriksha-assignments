@@ -11,9 +11,9 @@ typedef struct productInformation
 
 } product;
 
-unsigned short productsCount = 0;
+unsigned short productsCount = 0, spaceLeft=0;
 
-unsigned int getIntInput(char *prompt)
+unsigned int getIntInput(const char *prompt)
 {
 
     unsigned int value;
@@ -42,7 +42,7 @@ unsigned int getIntInput(char *prompt)
     }
 }
 
-float getFloatInput(char *prompt)
+float getFloatInput(const char *prompt)
 {
 
     float value;
@@ -71,7 +71,7 @@ float getFloatInput(char *prompt)
     }
 }
 
-unsigned short getId(product *products)
+unsigned short getId(const product *products)
 {
     unsigned short id;
     int duplicate;
@@ -102,7 +102,7 @@ unsigned short getId(product *products)
     return id;
 }
 
-void getName(char *productName, char *prompt)
+void getName(char *productName, const char *prompt)
 {
     char tempProductName[50];
 
@@ -150,7 +150,7 @@ float getPrice()
     return price;
 }
 
-unsigned int getQuantity(char *prompt)
+unsigned int getQuantity(const char *prompt)
 {
     unsigned int quantity = getIntInput(prompt);
 
@@ -163,7 +163,7 @@ unsigned int getQuantity(char *prompt)
     return quantity;
 }
 
-product *addNewProduct(product *products, unsigned short *initialProducts)
+product *addNewProduct(product *products, const unsigned short initialProducts)
 {
     if (products == NULL)
     {
@@ -174,7 +174,7 @@ product *addNewProduct(product *products, unsigned short *initialProducts)
             return NULL;
         }
     }
-    else if (productsCount >= *initialProducts)
+    else if (productsCount >= initialProducts)
     {
         product *tempProducts = (product *)realloc(products, (productsCount + 1) * sizeof(product));
         if (tempProducts == NULL)
@@ -200,7 +200,7 @@ product *addNewProduct(product *products, unsigned short *initialProducts)
     return products;
 }
 
-void printAllProducts(product *products)
+void printAllProducts(const product *products)
 {
     if (products == NULL || productsCount == 0)
     {
@@ -238,10 +238,10 @@ void updateQuantity(product *products)
         }
     }
 
-    printf("Quantity update unsuccessful, ID does not match\n\n");
+    printf("Quantity update unsuccessful, ID %hu does not match\n\n", id);
 }
 
-void searchProductById(product *products)
+void searchProductById(const product *products)
 {
     if (products == NULL || productsCount == 0)
     {
@@ -263,7 +263,7 @@ void searchProductById(product *products)
     printf("Product Not Found for id: %hu\n\n", id);
 }
 
-void searchProductByName(product *products)
+void searchProductByName(const product *products)
 {
     if (products == NULL || productsCount == 0)
     {
@@ -301,7 +301,7 @@ void searchProductByName(product *products)
     }
 }
 
-void searchProductByPriceRange(product *products)
+void searchProductByPriceRange(const product *products)
 {
     if (products == NULL || productsCount == 0)
     {
@@ -358,7 +358,7 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
             if (tempProducts == NULL)
             {
                 productsCount++;
-                printf("products Array reallocation falied!\n");
+                printf("Product deleted successfully with id %hu, products Array reallocation falied!\n",idToDelete);
                 return products;
             }
 
