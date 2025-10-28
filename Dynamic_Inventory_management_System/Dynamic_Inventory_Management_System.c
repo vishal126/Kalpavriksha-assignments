@@ -5,7 +5,7 @@
 typedef struct productInformation
 {
     unsigned short int productId;
-    char productName[50];
+    char productName[51];
     float productPrice;
     unsigned int productQuantity;
 
@@ -104,7 +104,7 @@ unsigned short getId(const product *products)
 
 void getName(char *productName, const char *prompt)
 {
-    char tempProductName[50];
+    char tempProductName[51];
 
     while (1)
     {
