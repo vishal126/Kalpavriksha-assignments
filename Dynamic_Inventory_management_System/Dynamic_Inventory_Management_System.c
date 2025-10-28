@@ -335,14 +335,10 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
     {
         if (idToDelete == products[i].productId)
         {
-            for (int j = i; j < productsCount - 1; j++)
-            {
-                products[j] = products[j + 1];
-            }
 
-            productsCount--;
+            product lastProduct = products[productsCount-1];
 
-            if (productsCount == 0)
+            if (productsCount-1 == 0)
             {
                 free(products);
                 products = NULL;
@@ -352,16 +348,24 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
                 return products;
             }
 
-            product *tempProducts = (product *)realloc(products, (productsCount) * sizeof(product));
+            product *tempProducts = (product *)realloc(products, (productsCount-1) * sizeof(product));
 
             if (tempProducts == NULL)
             {
-                productsCount++;
-                printf("Product deleted successfully with id %hu, products Array reallocation falied!\n",idToDelete);
+                printf("products Array reallocation falied!\n");
                 return products;
             }
 
-            products = tempProducts;
+            productsCount--;
+
+            for(int leftShiftCounter = i; leftShiftCounter<productsCount-1; leftShiftCounter++) {
+                tempProducts[leftShiftCounter]=tempProducts[leftShiftCounter+1];
+            }
+
+            if(i!=productsCount) {
+                products[productsCount-1]=lastProduct;
+            }
+            products=tempProducts;
             printf("Product deleted successfully!\n\n");
             return products;
         }
