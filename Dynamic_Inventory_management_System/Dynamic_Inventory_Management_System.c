@@ -131,8 +131,7 @@ void getName(char *productName, const char *prompt)
             printf("Error reading input. Please try again.\n");
 
             int c;
-            while ((c = getchar()) != '\n' && c != EOF)
-                ;
+            while ((c = getchar()) != '\n' && c != EOF);
         }
     }
 }
@@ -144,7 +143,7 @@ float getPrice()
     while (price < 0 || price > 100000)
     {
         printf("enter price in range 0-100000\n");
-        price = getFloatInput("enter price of Product: ");
+        price = getFloatInput("Product Price: ");
     }
 
     return price;
@@ -397,7 +396,7 @@ int main()
 
     for (int i = 0; i < initialProducts; i++)
     {
-        addNewProduct(products, &initialProducts);
+        products = addNewProduct(products, initialProducts);
     }
 
     while (1)
@@ -409,7 +408,7 @@ int main()
         switch (choice)
         {
         case 1:
-            products = addNewProduct(products, &initialProducts);
+            products = addNewProduct(products, initialProducts);
             break;
 
         case 2:
