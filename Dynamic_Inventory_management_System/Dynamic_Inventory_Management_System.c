@@ -11,7 +11,7 @@ typedef struct productInformation
 
 } product;
 
-unsigned short productsCount = 0, spaceLeft=0;
+unsigned short productsCount = 0;
 
 unsigned int getIntInput(const char *prompt)
 {
@@ -87,9 +87,9 @@ unsigned short getId(const product *products)
         }
 
         duplicate = 0;
-        for (int i = 0; i < productsCount; i++)
+        for (int productCounter = 0; productCounter < productsCount; productCounter++)
         {
-            if (id == products[i].productId)
+            if (id == products[productCounter].productId)
             {
                 printf("ID %hu already exists. Enter new ID.\n", id);
                 duplicate = 1;
@@ -209,9 +209,9 @@ void printAllProducts(const product *products)
 
     printf("========= PRODUCT LIST =========\n");
 
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
-        printf("Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n", products[i].productId, products[i].productName, products[i].productPrice, products[i].productQuantity);
+        printf("Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n", products[productCounter].productId, products[productCounter].productName, products[productCounter].productPrice, products[productCounter].productQuantity);
     }
     printf("\n");
 }
@@ -227,11 +227,11 @@ void updateQuantity(product *products)
     unsigned short id = (unsigned short)getIntInput("Enter Product ID to update quantity: ");
     unsigned int quantity = getQuantity("Enter new Quantity: ");
     
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
-        if (products[i].productId == id)
+        if (products[productCounter].productId == id)
         {
-            products[i].productQuantity = quantity;
+            products[productCounter].productQuantity = quantity;
             printf("Quantity updated successfully!\n\n");
             return;
         }
@@ -250,11 +250,11 @@ void searchProductById(const product *products)
 
     unsigned short id = (unsigned short)getIntInput("Enter Product ID to search: ");
 
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
-        if (id == products[i].productId)
+        if (id == products[productCounter].productId)
         {
-            printf("Product Found: Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n\n", products[i].productId, products[i].productName, products[i].productPrice, products[i].productQuantity);
+            printf("Product Found: Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n\n", products[productCounter].productId, products[productCounter].productName, products[productCounter].productPrice, products[productCounter].productQuantity);
             return;
         }
     }
@@ -277,19 +277,19 @@ void searchProductByName(const product *products)
     printf("Products Found:\n");
 
     int found = 0;
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
         char productName[50];
-        strcpy(productName, products[i].productName);
+        strcpy(productName, products[productCounter].productName);
         strlwr(productName);
 
         if (strstr(productName, productNameToSearch) != NULL)
         {
             printf("Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n",
-                   products[i].productId,
-                   products[i].productName,
-                   products[i].productPrice,
-                   products[i].productQuantity);
+                   products[productCounter].productId,
+                   products[productCounter].productName,
+                   products[productCounter].productPrice,
+                   products[productCounter].productQuantity);
             found = 1;
         }
     }
@@ -312,11 +312,11 @@ void searchProductByPriceRange(const product *products)
     float maximumPrice = getFloatInput("Enter maximum price: ");
 
     printf("\nProducts in price range: \n");
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
-        if (products[i].productPrice >= minimumPrice && products[i].productPrice <= maximumPrice)
+        if (products[productCounter].productPrice >= minimumPrice && products[productCounter].productPrice <= maximumPrice)
         {
-            printf("Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n\n", products[i].productId, products[i].productName, products[i].productPrice, products[i].productQuantity);
+            printf("Product ID: %hu | Name: %s | Price: %.2f | Quantity: %u\n\n", products[productCounter].productId, products[productCounter].productName, products[productCounter].productPrice, products[productCounter].productQuantity);
         }
     }
 }
@@ -331,9 +331,9 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
 
     unsigned short idToDelete = getIntInput("Enter Product ID to delete: ");
 
-    for (int i = 0; i < productsCount; i++)
+    for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
-        if (idToDelete == products[i].productId)
+        if (idToDelete == products[productCounter].productId)
         {
 
             product lastProduct = products[productsCount-1];
@@ -358,11 +358,11 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
 
             productsCount--;
 
-            for(int leftShiftCounter = i; leftShiftCounter<productsCount-1; leftShiftCounter++) {
+            for(int leftShiftCounter = productCounter; leftShiftCounter<productsCount-1; leftShiftCounter++) {
                 tempProducts[leftShiftCounter]=tempProducts[leftShiftCounter+1];
             }
 
-            if(i!=productsCount) {
+            if(productCounter!=productsCount) {
                 products[productsCount-1]=lastProduct;
             }
             products=tempProducts;
@@ -398,7 +398,7 @@ int main()
         return 1;
     }
 
-    for (int i = 0; i < initialProducts; i++)
+    for (int productCounter = 0; productCounter < initialProducts; productCounter++)
     {
         products = addNewProduct(products, initialProducts);
     }
