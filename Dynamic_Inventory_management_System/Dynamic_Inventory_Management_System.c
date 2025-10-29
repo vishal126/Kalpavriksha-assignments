@@ -15,7 +15,6 @@ unsigned short productsCount = 0;
 
 unsigned int getIntInput(const char *prompt)
 {
-
     unsigned int value;
     char buffer[100];
 
@@ -129,9 +128,6 @@ void getName(char *productName, const char *prompt)
         else
         {
             printf("Error reading input. Please try again.\n");
-
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
         }
     }
 }
@@ -226,7 +222,7 @@ void updateQuantity(product *products)
 
     unsigned short id = (unsigned short)getIntInput("Enter Product ID to update quantity: ");
     unsigned int quantity = getQuantity("Enter new Quantity: ");
-    
+
     for (int productCounter = 0; productCounter < productsCount; productCounter++)
     {
         if (products[productCounter].productId == id)
@@ -336,9 +332,9 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
         if (idToDelete == products[productCounter].productId)
         {
 
-            product lastProduct = products[productsCount-1];
+            product lastProduct = products[productsCount - 1];
 
-            if (productsCount-1 == 0)
+            if (productsCount - 1 == 0)
             {
                 free(products);
                 products = NULL;
@@ -348,7 +344,7 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
                 return products;
             }
 
-            product *tempProducts = (product *)realloc(products, (productsCount-1) * sizeof(product));
+            product *tempProducts = (product *)realloc(products, (productsCount - 1) * sizeof(product));
 
             if (tempProducts == NULL)
             {
@@ -358,14 +354,16 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
 
             productsCount--;
 
-            for(int leftShiftCounter = productCounter; leftShiftCounter<productsCount-1; leftShiftCounter++) {
-                tempProducts[leftShiftCounter]=tempProducts[leftShiftCounter+1];
+            for (int leftShiftCounter = productCounter; leftShiftCounter < productsCount - 1; leftShiftCounter++)
+            {
+                tempProducts[leftShiftCounter] = tempProducts[leftShiftCounter + 1];
             }
 
-            if(productCounter!=productsCount) {
-                products[productsCount-1]=lastProduct;
+            if (productCounter != productsCount)
+            {
+                products[productsCount - 1] = lastProduct;
             }
-            products=tempProducts;
+            products = tempProducts;
             printf("Product deleted successfully!\n\n");
             return products;
         }
