@@ -233,7 +233,7 @@ void updateQuantity(product *products)
         }
     }
 
-    printf("Quantity update unsuccessful, ID %hu does not match\n\n", id);
+    printf("Quantity update unsuccessful, Product not found with ID %hu \n\n", id);
 }
 
 void searchProductById(const product *products)
@@ -353,6 +353,10 @@ product *deleteProductById(product *products, unsigned short *initialProducts)
             }
 
             productsCount--;
+            
+            if(*initialProducts) {
+                *initialProducts = *initialProducts-1;
+            }
 
             for (int leftShiftCounter = productCounter; leftShiftCounter < productsCount - 1; leftShiftCounter++)
             {
