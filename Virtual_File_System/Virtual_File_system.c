@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define NUMBEROFBLOCKS 20
-#define SIZEOFBLOCK 10
+#define SIZEOFBLOCK 512
 
 typedef struct FreeBlock
 {
@@ -59,25 +59,25 @@ short int initializeDLL()
 {
     for (int dllCounter = 0; dllCounter < NUMBEROFBLOCKS; dllCounter++)
     {
-        FreeBlock *temp = (FreeBlock *)calloc(1, sizeof(FreeBlock));
-        if (temp == NULL)
+        FreeBlock *tempBlock = (FreeBlock *)calloc(1, sizeof(FreeBlock));
+        if (tempBlock == NULL)
         {
             printf("Failed to Initialize Free Blocks!\nEnding program.");
             return -1;
         }
-        temp->index = dllCounter;
-        temp->next = NULL;
-        temp->prev = doublyListTail;
+        tempBlock->index = dllCounter;
+        tempBlock->next = NULL;
+        tempBlock->prev = doublyListTail;
 
         if (doublyListHead == NULL)
         {
-            doublyListHead = temp;
+            doublyListHead = tempBlock;
         }
         else
         {
-            doublyListTail->next = temp;
+            doublyListTail->next = tempBlock;
         }
-        doublyListTail = temp;
+        doublyListTail = tempBlock;
     }
     return 0;
 }
@@ -90,7 +90,7 @@ unsigned short allocateBlocksFromDll()
         return (unsigned short)-1;
     }
 
-    FreeBlock *temp = doublyListHead;
+    FreeBlock *tempBlock = doublyListHead;
 
     doublyListHead = doublyListHead->next;
 
@@ -103,8 +103,8 @@ unsigned short allocateBlocksFromDll()
         doublyListTail = NULL;
     }
 
-    unsigned short blockIndex = temp->index;
-    free(temp);
+    unsigned short blockIndex = tempBlock->index;
+    free(tempBlock);
 
     freeBlocks--;
 
@@ -113,50 +113,50 @@ unsigned short allocateBlocksFromDll()
 
 short int freeBlocksToDll(unsigned int index)
 {
-    FreeBlock *temp = (FreeBlock *)calloc(1, sizeof(FreeBlock));
-    if (temp == NULL)
+    FreeBlock *tempBlock = (FreeBlock *)calloc(1, sizeof(FreeBlock));
+    if (tempBlock == NULL)
     {
         printf("Unable to allocate memory to free Block!\nTry again.\n");
         return -1;
     }
 
-    temp->index = index;
-    temp->next = NULL;
-    temp->prev = doublyListTail;
+    tempBlock->index = index;
+    tempBlock->next = NULL;
+    tempBlock->prev = doublyListTail;
 
     memset(virtualDisk[index], 0, SIZEOFBLOCK);
 
     if (doublyListHead == NULL)
     {
-        doublyListHead = temp;
+        doublyListHead = tempBlock;
     }
     else
     {
-        doublyListTail->next = temp;
+        doublyListTail->next = tempBlock;
     }
 
-    doublyListTail = temp;
+    doublyListTail = tempBlock;
     freeBlocks++;
 }
 
 FileNode *createNode(char *name, unsigned short type)
 {
-    FileNode *temp = (FileNode *)calloc(1, sizeof(FileNode));
-    if (temp == NULL)
+    FileNode *tempNode = (FileNode *)calloc(1, sizeof(FileNode));
+    if (tempNode == NULL)
     {
         printf("Memory allocation failed!\n");
         return NULL;
     }
 
-    strcpy(temp->Name, name);
-    temp->next = NULL;
-    temp->parent = cwd;
-    temp->type = type;
-    temp->blockCount = 0;
-    temp->blockPointers = NULL;
-    temp->child = NULL;
+    strcpy(tempNode->Name, name);
+    tempNode->next = NULL;
+    tempNode->parent = cwd;
+    tempNode->type = type;
+    tempNode->blockCount = 0;
+    tempNode->blockPointers = NULL;
+    tempNode->child = NULL;
 
-    return temp;
+    return tempNode;
 }
 
 void insertInCwd(FileNode *newNode)
@@ -184,24 +184,24 @@ void insertInCwd(FileNode *newNode)
     newNode->parent = cwd;
 }
 
-int isValidDirName(const char *name)
+int isValidDirName(const char *dirName)
 {
-    if (name == NULL || strlen(name) == 0 || strlen(name) > 50)
+    if (dirName == NULL || strlen(dirName) == 0 || strlen(dirName) > 50)
         return 0;
 
-    if (strchr(name, '/') || strchr(name, '"') || strchr(name, '\'') || strchr(name, '\\'))
+    if (strchr(dirName, '/') || strchr(dirName, '"') || strchr(dirName, '\'') || strchr(dirName, '\\'))
         return 0;
 
     return 1;
 }
 
-int isValidFileName(const char *name)
+int isValidFileName(const char *fileName)
 {
-    if (name == NULL || strlen(name) == 0 || strlen(name) > 50)
+    if (fileName == NULL || strlen(fileName) == 0 || strlen(fileName) > 50)
         return 0;
 
-    if (strchr(name, ' ') || strchr(name, '/') || strchr(name, '"') ||
-        strchr(name, '\'') || strchr(name, '\\'))
+    if (strchr(fileName, ' ') || strchr(fileName, '/') || strchr(fileName, '"') ||
+        strchr(fileName, '\'') || strchr(fileName, '\\'))
         return 0;
 
     return 1;
