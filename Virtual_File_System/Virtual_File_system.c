@@ -14,7 +14,7 @@ typedef struct FreeBlock
 
 typedef struct FileNode
 {
-    char Name[51];
+    char name[51];
     unsigned short blockCount;
     unsigned short *blockPointers;
     unsigned short type;
@@ -148,7 +148,7 @@ FileNode *createNode(char *name, unsigned short type)
         return NULL;
     }
 
-    strcpy(tempNode->Name, name);
+    strcpy(tempNode->name, name);
     tempNode->next = NULL;
     tempNode->parent = cwd;
     tempNode->type = type;
@@ -221,9 +221,9 @@ void mkdir(char *dirName)
     {
         do
         {
-            if (strcmp(check->Name, dirName) == 0)
+            if (strcmp(check->name, dirName) == 0)
             {
-                printf("Error: '%s' already exists in '%s'.\n", dirName, cwd->Name);
+                printf("Error: '%s' already exists in '%s'.\n", dirName, cwd->name);
                 return;
             }
             check = check->next;
@@ -238,7 +238,7 @@ void mkdir(char *dirName)
     }
 
     insertInCwd(directory);
-    printf("Directory '%s' created under '%s'\n", dirName, cwd->Name);
+    printf("Directory '%s' created under '%s'\n", dirName, cwd->name);
 }
 
 void create(char *fileName)
@@ -255,9 +255,9 @@ void create(char *fileName)
     {
         do
         {
-            if (strcmp(check->Name, fileName) == 0)
+            if (strcmp(check->name, fileName) == 0)
             {
-                printf("Error: '%s' already exists in '%s'.\n", fileName, cwd->Name);
+                printf("Error: '%s' already exists in '%s'.\n", fileName, cwd->name);
                 return;
             }
             check = check->next;
@@ -272,7 +272,7 @@ void create(char *fileName)
     }
 
     insertInCwd(file);
-    printf("File '%s' created under '%s'\n", fileName, cwd->Name);
+    printf("File '%s' created under '%s'\n", fileName, cwd->name);
 }
 
 void writeFile(FileNode *node, char *content)
@@ -339,7 +339,7 @@ void write(char *fileName, char *content)
     FileNode *temp = head;
     do
     {
-        if (temp->type == 0 && strcmp(temp->Name, fileName) == 0)
+        if (temp->type == 0 && strcmp(temp->name, fileName) == 0)
         {
             writeFile(temp, content);
             return;
@@ -363,7 +363,7 @@ void read(char *fileName)
 
     do
     {
-        if (strcmp(temp->Name, fileName) == 0)
+        if (strcmp(temp->name, fileName) == 0)
         {
             if (temp->type == 1)
             {
@@ -408,7 +408,7 @@ void delete(char *fileName)
 
     do
     {
-        if (strcmp(temp->Name, fileName) == 0)
+        if (strcmp(temp->name, fileName) == 0)
         {
             if (temp->type == 1)
             {
@@ -450,7 +450,7 @@ void delete(char *fileName)
                 prev->next = temp->next;
             }
 
-            printf("File '%s' deleted successfully from '%s'.\n", fileName, cwd->Name);
+            printf("File '%s' deleted successfully from '%s'.\n", fileName, cwd->name);
 
             free(temp);
             return;
@@ -476,7 +476,7 @@ void rmdir(char *dirName)
 
     do
     {
-        if (strcmp(temp->Name, dirName) == 0)
+        if (strcmp(temp->name, dirName) == 0)
         {
             if (temp->type == 0)
             {
@@ -509,7 +509,7 @@ void rmdir(char *dirName)
                 prev->next = temp->next;
             }
 
-            printf("Directory '%s' deleted successfully from '%s'.\n", dirName, cwd->Name);
+            printf("Directory '%s' deleted successfully from '%s'.\n", dirName, cwd->name);
 
             free(temp);
             return;
@@ -531,11 +531,11 @@ void ls()
 
     FileNode *head = cwd->child;
     FileNode *temp = head;
-    printf("Contents of '%s':\n", cwd->Name);
+    printf("Contents of '%s':\n", cwd->name);
 
     do
     {
-        printf("  %s%s\n", temp->Name, (temp->type == 1) ? "/" : "");
+        printf("  %s%s\n", temp->name, (temp->type == 1) ? "/" : "");
         temp = temp->next;
     } while (temp != head);
 }
@@ -544,9 +544,9 @@ void cd(char *dirName)
 {
     if (strcmp(dirName, "..") == 0)
     {
-        if (strcmp(cwd->Name, "/") == 0)
+        if (strcmp(cwd->name, "/") == 0)
         {
-            printf("CWD is %s cannot move!\n", cwd->Name);
+            printf("CWD is %s cannot move!\n", cwd->name);
             return;
         }
 
@@ -558,13 +558,13 @@ void cd(char *dirName)
         else
             strcpy(currentPath, "/");
 
-        printf("Moved to parent directory: '%s'\n", cwd->Name);
+        printf("Moved to parent directory: '%s'\n", cwd->name);
         return;
     }
 
     if (cwd->child == NULL)
     {
-        printf("No subdirectories exist in '%s'.\n", cwd->Name);
+        printf("No subdirectories exist in '%s'.\n", cwd->name);
         return;
     }
 
@@ -573,7 +573,7 @@ void cd(char *dirName)
 
     do
     {
-        if (strcmp(temp->Name, dirName) == 0)
+        if (strcmp(temp->name, dirName) == 0)
         {
             if (temp->type == 0)
             {
@@ -588,13 +588,13 @@ void cd(char *dirName)
             else
                 sprintf(currentPath + strlen(currentPath), "/%s", dirName);
 
-            printf("Now in directory: '%s'\n", cwd->Name);
+            printf("Now in directory: '%s'\n", cwd->name);
             return;
         }
         temp = temp->next;
     } while (temp != head);
 
-    printf("Directory '%s' not found in current directory '%s'.\n", dirName, cwd->Name);
+    printf("Directory '%s' not found in current directory '%s'.\n", dirName, cwd->name);
 }
 
 void pwd()
@@ -873,7 +873,7 @@ int main()
 
     while (1)
     {
-        printf("%s> ", cwd->Name);
+        printf("%s> ", cwd->name);
 
         char *command = readLine();
         if (command == NULL)
