@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define NUMBEROFBLOCKS 20
-#define SIZEOFBLOCK 5
+#define SIZEOFBLOCK 512
 #define MAXNAMELENGTH 50
 
 typedef struct FreeBlock
