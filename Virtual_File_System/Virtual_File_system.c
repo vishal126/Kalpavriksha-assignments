@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define NUMBEROFBLOCKS 100
-#define SIZEOFBLOCK 512
+#define NUMBEROFBLOCKS 20
+#define SIZEOFBLOCK 5
 #define MAXNAMELENGTH 50
 
 typedef struct FreeBlock
@@ -86,11 +86,10 @@ short int initializeFreeBlocks()
     return 0;
 }
 
-short int allocateBlocksFromFreeBlocks()
+short int allocateBlocksFromFreeBlocks(unsigned short *blockIndex)
 {
     if (fileSystem.doublyListHead == NULL)
     {
-        printf("No free blocks left\n");
         return -1;
     }
 
@@ -107,12 +106,12 @@ short int allocateBlocksFromFreeBlocks()
         fileSystem.doublyListTail = NULL;
     }
 
-    unsigned short blockIndex = tempBlock->index;
+    *blockIndex = tempBlock->index;
     free(tempBlock);
 
     fileSystem.freeBlocks--;
 
-    return blockIndex;
+    return 0;
 }
 
 short int allocateBlocksToFreeBlocks(const unsigned int index)
@@ -141,6 +140,8 @@ short int allocateBlocksToFreeBlocks(const unsigned int index)
 
     fileSystem.doublyListTail = tempBlock;
     fileSystem.freeBlocks++;
+
+    return 0;
 }
 
 FileNode *createNode(const char *name, const bool type)
@@ -286,109 +287,80 @@ void create(const char *fileName)
 void writeFile(FileNode *node, const char *content)
 {
     size_t len = strlen(content);
-    size_t blocksRequired = (len + SIZEOFBLOCK - 1) / SIZEOFBLOCK;
+    size_t blocksNeeded = (len + SIZEOFBLOCK - 1) / SIZEOFBLOCK;
 
-    if (node->blockPointers != NULL)
+    size_t offset = 0;
+    unsigned short blockCounter = 0;
+
+    while (offset < len)
     {
-        if (blocksRequired < node->blockCount)
+        if (blockCounter >= node->blockCount)
         {
-            unsigned short extraBlocks = (node->blockCount - blocksRequired);
-            unsigned short loopStop = node->blockCount - extraBlocks;
-            for (int blockCounter = node->blockCount-1; blockCounter >= loopStop; blockCounter--)
-            {
-                short int response = allocateBlocksToFreeBlocks(node->blockPointers[blockCounter]);
-                if (response == -1)
-                {
-                    printf("Unable to free All blocks\n");
-                    unsigned short *tempBlockPointer = (unsigned short *)realloc(node->blockPointers, node->blockCount * sizeof(unsigned short));
-                    if (tempBlockPointer == NULL)
-                    {
-                        printf("Memory reallocation failed!\n");
-                    }
-                    else
-                        node->blockPointers = tempBlockPointer;
+            unsigned short *tempPtr = realloc(node->blockPointers, (node->blockCount + 1) * sizeof(unsigned short));
 
+            if (!tempPtr)
+            {
+                printf("Realloc failed!\n");
+                return;
+            }
+
+            node->blockPointers = tempPtr;
+
+            unsigned short newBlock;
+            if (allocateBlocksFromFreeBlocks(&newBlock) != 0)
+            {
+                printf("No free blocks!\n");
+                unsigned short *tempPtr = realloc(node->blockPointers, (node->blockCount) * sizeof(unsigned short));
+
+                if (!tempPtr)
+                {
+                    printf("Realloc failed!\n");
                     return;
                 }
-            }
-            node->blockCount = blocksRequired;
 
-            unsigned short *tempBlockPointer = (unsigned short *)realloc(node->blockPointers, blocksRequired * sizeof(unsigned short));
-            if (tempBlockPointer == NULL)
-            {
-                printf("Memory reallocation failed!\n");
-                return;
-            }
-            node->blockPointers = tempBlockPointer;
-        }
-        else if (blocksRequired > node->blockCount)
-        {
-            unsigned short blocksNeeded = blocksRequired - node->blockCount;
-
-            if (fileSystem.freeBlocks < blocksNeeded)
-            {
-                printf("Error: Not enough disk space to write data. Required %d blocks, only %d available.\n", blocksRequired, fileSystem.freeBlocks);
+                node->blockPointers = tempPtr;
                 return;
             }
 
-            unsigned short *tempBlockPointer = (unsigned short *)realloc(node->blockPointers, blocksRequired * sizeof(unsigned short));
-            if (tempBlockPointer == NULL)
-            {
-                printf("Memory reallocation failed!\n");
-                return;
-            }
-            node->blockPointers = tempBlockPointer;
-
-            for (int blockCounter = node->blockCount; blockCounter < blocksRequired; blockCounter++)
-            {
-                short int blockIndex = allocateBlocksFromFreeBlocks();
-                if (blockIndex == -1)
-                {
-                    return;
-                }
-                node->blockPointers[blockCounter] = blockIndex;
-            }
-            node->blockCount = blocksRequired;
-        }
-    }
-    else
-    {
-        if (fileSystem.freeBlocks < blocksRequired)
-        {
-            printf("Error: Not enough disk space to write data. Required %d blocks, only %d available.\n", blocksRequired, fileSystem.freeBlocks);
-            return;
-        }
-        node->blockCount = blocksRequired;
-        node->blockPointers = (unsigned short *)calloc(blocksRequired, sizeof(unsigned short));
-        if (node->blockPointers == NULL)
-        {
-            printf("Memory allocation failed!, try again\n");
-            return;
+            node->blockPointers[node->blockCount] = newBlock;
+            node->blockCount++;
         }
 
-        for (unsigned short int blockCounter = 0; blockCounter < blocksRequired; blockCounter++)
-        {
-            short int blockIndex = allocateBlocksFromFreeBlocks();
-            if (blockIndex == -1)
-            {
-                return;
-            }
-            node->blockPointers[blockCounter] = blockIndex;
-        }
-    }
-
-    unsigned short offset = 0;
-    for (unsigned short int blockCounter = 0; blockCounter < blocksRequired; blockCounter++)
-    {
         memset(virtualDisk[node->blockPointers[blockCounter]], 0, SIZEOFBLOCK);
-        unsigned short remaining = len - offset;
-        unsigned short copySize = (remaining >= SIZEOFBLOCK) ? SIZEOFBLOCK : remaining;
+
+        size_t remaining = len - offset;
+        size_t copySize = remaining > SIZEOFBLOCK ? SIZEOFBLOCK : remaining;
 
         memcpy(virtualDisk[node->blockPointers[blockCounter]], content + offset, copySize);
+
         offset += copySize;
+        blockCounter++;
     }
 
-    printf("Data written successfully, (%d bytes %d blocks)\n", len, blocksRequired);
+    while (node->blockCount > blockCounter)
+    {
+        unsigned short index = node->blockPointers[node->blockCount - 1];
+
+        if (allocateBlocksToFreeBlocks(index) == -1)
+        {
+            printf("Error freeing block!\n");
+            return;
+        }
+
+        node->blockCount--;
+    }
+
+    if (node->blockCount > 0)
+    {
+        unsigned short *tempPtr =
+            realloc(node->blockPointers, node->blockCount * sizeof(unsigned short));
+
+        if (tempPtr)
+            node->blockPointers = tempPtr;
+    }
+
+    printf("Data written successfully (%zu bytes, %hu blocks)\n",
+           len, node->blockCount);
 }
 
 FileNode *findFile(const char *fileName)
@@ -448,7 +420,7 @@ void read(const char *fileName)
     printf("\n");
     return;
 }
-// ** needed
+
 void removeNode(FileNode *temp, FileNode *head, FileNode *prev)
 {
     if (temp->next == temp)
@@ -827,11 +799,20 @@ void freeNode(FileNode *node)
 void freeMemory()
 {
     FreeBlock *temp = fileSystem.doublyListHead;
-    while (temp != NULL)
+    while (temp)
     {
         FreeBlock *next = temp->next;
         free(temp);
         temp = next;
+    }
+
+    if (fileSystem.cwd)
+    {
+        FileNode *root = fileSystem.cwd;
+        while (root->parent)
+            root = root->parent;
+
+        freeNode(root);
     }
 }
 
