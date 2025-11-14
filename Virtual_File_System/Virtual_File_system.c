@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define NUMBEROFBLOCKS 20
-#define SIZEOFBLOCK 5
+#define NUMBEROFBLOCKS 100
+#define SIZEOFBLOCK 512
 #define MAXNAMELENGTH 50
 
 typedef struct FreeBlock
