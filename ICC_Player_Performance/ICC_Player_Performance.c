@@ -46,7 +46,7 @@ typedef struct teamObject
     unsigned short totalPlayers;
     float averageBattingStrikeRate;
     unsigned short battingPlayers;
-    struct teamObject *next;
+    // struct teamObject *next;
     struct playerObject *playersStart;
     roleNode *batsmanStart;
     roleNode *bowlerStart;
@@ -66,9 +66,7 @@ typedef struct playerData
     float playerEconomyRate;
 } playerData;
 
-teamObject *teamsHead = NULL;
-teamObject *teamsTail = NULL;
-
+teamObject teamsArr[NUMBEROFTEAMS];
 teamObject *teamPointer[NUMBEROFTEAMS];
 
 unsigned int getIntInput(const char *prompt)
@@ -166,101 +164,76 @@ float getPerformanceIndex(const char *role, const float battingAverage, const fl
 
 void freePlayers()
 {
-    teamObject *teamCounter = teamsHead;
-
-    while (teamCounter)
+    for(int teamCounter = 0; teamCounter<NUMBEROFTEAMS; teamCounter++)
     {
-        playerObject *playerCounter = teamCounter->playersStart;
+        playerObject *playerCounter = teamsArr[teamCounter].playersStart;
         while (playerCounter)
         {
             playerObject *nextPlayer = playerCounter->next;
             free(playerCounter);
             playerCounter = nextPlayer;
         }
+        teamsArr[teamCounter].playersStart = NULL;
 
-        roleNode *batsmanCounter = teamCounter->batsmanStart;
+        roleNode *batsmanCounter = teamsArr[teamCounter].batsmanStart;
         while (batsmanCounter)
         {
             roleNode *nextBatsman = batsmanCounter->next;
             free(batsmanCounter);
             batsmanCounter = nextBatsman;
         }
-        roleNode *bowlerCounter = teamCounter->bowlerStart;
+        teamsArr[teamCounter].batsmanStart = NULL;
+
+        roleNode *bowlerCounter = teamsArr[teamCounter].bowlerStart;
         while (bowlerCounter)
         {
             roleNode *nextBowler = bowlerCounter->next;
             free(bowlerCounter);
             bowlerCounter = nextBowler;
         }
-        roleNode *allRounderCounter = teamCounter->allRounderStart;
+        teamsArr[teamCounter].bowlerStart = NULL;
+
+        roleNode *allRounderCounter = teamsArr[teamCounter].allRounderStart;
         while (allRounderCounter)
         {
             roleNode *nextAllRounder = allRounderCounter->next;
             free(allRounderCounter);
             allRounderCounter = nextAllRounder;
         }
-        teamCounter = teamCounter->next;
+        teamsArr[teamCounter].allRounderStart = NULL;
+
+        teamsArr[teamCounter].totalPlayers = 0;
+        teamsArr[teamCounter].battingPlayers = 0;
+        teamsArr[teamCounter].averageBattingStrikeRate = 0.0f;
+
     }
 }
 
-void freeTeams()
-{
-    freePlayers();
+void initializeTeamsArr() {
+    for (unsigned short teamCtr = 0; teamCtr < NUMBEROFTEAMS; teamCtr++) {
 
-    teamObject *teamCounter = teamsHead;
+        teamObject *team = &teamsArr[teamCtr];
+        memset(team, 0, sizeof(teamObject));
 
-    while (teamCounter)
-    {
-        teamObject *nextTeam = teamCounter->next;
-        free(teamCounter);
-        teamCounter = nextTeam;
-    }
+        strcpy(team->name, teams[teamCtr]);
+        team->teamId = teamCtr + 1;
 
-    teamsHead = NULL;
-    teamsTail = NULL;
-}
-
-void initializeTeams(int *error)
-{
-    for (int i = 0; i < teamCount; i++)
-    {
-        teamObject *team = malloc(sizeof(teamObject));
-        if (!team)
-        {
-            freeTeams();
-            printf("Memory allocation failed!\n");
-            *error = -1;
-            return;
-        }
-
-        strcpy(team->name, teams[i]);
-        team->teamId = i + 1;
         team->totalPlayers = 0;
         team->battingPlayers = 0;
-        team->averageBattingStrikeRate = 0;
+        team->averageBattingStrikeRate = 0.0f;
 
         team->playersStart = NULL;
-
         team->batsmanStart = NULL;
         team->bowlerStart = NULL;
         team->allRounderStart = NULL;
 
-        team->next = NULL;
-
-        if (teamsHead == NULL)
-            teamsHead = team;
-        else
-            teamsTail->next = team;
-
-        teamsTail = team;
-        teamPointer[i] = team;
+        teamPointer[teamCtr] = team;
     }
-
-    *error = 0;
 }
 
 void insertIntoRoleList(roleNode **start, playerObject *player, int *error)
 {
+    *error=0;
     roleNode *newNode = malloc(sizeof(roleNode));
     if (!newNode)
     {
@@ -311,7 +284,7 @@ void InsertNodeSorted(teamObject *team, playerObject *node)
 
     if (cur == NULL)
     {
-        team->playersStart = node;
+        team->playersStart = node;  
     }
     else
     {
@@ -340,6 +313,7 @@ void InsertNodeSorted(teamObject *team, playerObject *node)
 
 void checkAndInsertInRole(playerObject *node, teamObject *team, int *error)
 {
+    *error=0;
     if (getEnumRole(node->role) == BATSMAN)
     {
         insertIntoRoleList(&team->batsmanStart, node, error);
@@ -368,11 +342,11 @@ void checkAndInsertInRole(playerObject *node, teamObject *team, int *error)
 
 void initializePlayers(int *error)
 {
-    teamObject *team = teamsHead;
-
-    while (team != NULL)
+    *error=0;
+    for(int teamCounter = 0; teamCounter<NUMBEROFTEAMS; teamCounter++)
     {
-        float totalStrikeRate = 0;
+        teamObject *team = &teamsArr[teamCounter];
+        float totalStrikeRate = 0.0f;
         unsigned short battingPlayers = 0;
         unsigned short totalPlayers = 0;
 
@@ -437,31 +411,17 @@ void initializePlayers(int *error)
             team->averageBattingStrikeRate = totalStrikeRate / battingPlayers;
         else
             team->averageBattingStrikeRate = 0;
-
-        team = team->next;
     }
 
     *error = 0;
 }
 
-teamObject *findTeam(const unsigned short teamId)
+teamObject* findTeam(unsigned short teamId)
 {
-    unsigned short low = 0;
-    unsigned short high = teamCount - 1;
+    if (teamId < 1 || teamId > NUMBEROFTEAMS)
+        return NULL;
 
-    while (low <= high)
-    {
-        unsigned short mid = (low + high) / 2;
-        unsigned short midId = teamPointer[mid]->teamId;
-
-        if (teamId == midId)
-            return teamPointer[mid];
-        if (teamId > midId)
-            low = mid + 1;
-        else
-            high = mid - 1;
-    }
-    return NULL;
+    return teamPointer[teamId - 1];
 }
 
 void checkForDuplicatePlayerId(const unsigned short playerId, const teamObject *team, int *error)
@@ -469,7 +429,7 @@ void checkForDuplicatePlayerId(const unsigned short playerId, const teamObject *
     *error = 0;
     playerObject *playerCounter = team->playersStart;
 
-    while (playerCounter != NULL)
+    while (playerCounter)
     {
         if (playerCounter->playerId == playerId)
         {
@@ -674,97 +634,33 @@ void displayPlayersOfSpecificTeam()
     printf("\n");
 }
 
-teamObject *getMiddleTeam(teamObject *head)
-{
-    teamObject *slow = head;
-    teamObject *fast = head->next;
-
-    while (fast != NULL && fast->next != NULL)
-    {
-        slow = slow->next;
-        fast = fast->next->next;
-    }
-
-    return slow;
-}
-
-teamObject *mergeTeams(teamObject *list1, teamObject *list2)
-{
-    teamObject dummy;
-
-    dummy.next = NULL;
-
-    teamObject *temp = &dummy;
-
-    while (list1 != NULL && list2 != NULL)
-    {
-        if (list1->averageBattingStrikeRate > list2->averageBattingStrikeRate)
-        {
-            temp->next = list1;
-            list1 = list1->next;
-        }
-        else
-        {
-            temp->next = list2;
-            list2 = list2->next;
-        }
-        temp = temp->next;
-    }
-
-    if (list1)
-        temp->next = list1;
-    else
-        temp->next = list2;
-
-    return dummy.next;
-}
-
-teamObject *mergeSortTeams(teamObject *head)
-{
-    if (head == NULL || head->next == NULL)
-    {
-        return head;
-    }
-
-    teamObject *middle = getMiddleTeam(head);
-
-    teamObject *leftHead = head;
-    teamObject *rightHead = middle->next;
-    middle->next = NULL;
-
-    leftHead = mergeSortTeams(leftHead);
-    rightHead = mergeSortTeams(rightHead);
-
-    return mergeTeams(leftHead, rightHead);
-}
-
-teamObject *updateTeamTail(teamObject *head)
-{
-    if (head == NULL)
-        return NULL;
-
-    while (head->next != NULL)
-        head = head->next;
-
-    return head;
+int compareTeams(const void *a, const void *b) {
+    const teamObject *t1 = *(const teamObject * const *)a;
+    const teamObject *t2 = *(const teamObject * const *)b;
+    if (t1->averageBattingStrikeRate > t2->averageBattingStrikeRate) return -1;
+    if (t1->averageBattingStrikeRate < t2->averageBattingStrikeRate) return 1;
+    return 0;
 }
 
 void displayTeamsByAverageBattingStrikeRate()
 {
-    teamsHead = mergeSortTeams(teamsHead);
-    teamsTail = updateTeamTail(teamsHead);
+    teamObject* tempTeams[NUMBEROFTEAMS];
 
-    teamObject *teamCounter = teamsHead;
+    for(int teamCtr=0; teamCtr<NUMBEROFTEAMS; teamCtr++) {
+        tempTeams[teamCtr] = &teamsArr[teamCtr];
+    }
+
+    qsort(tempTeams, NUMBEROFTEAMS, sizeof(tempTeams[0]), compareTeams);
 
     printf("Teams Sorted by Average Batting Strike Rate\n");
     printf("===============================================================================================================================\n");
     printf("%-5s %-50s %-8s %-6s\n", "ID", "Team Name", "Avg Bat SR", "Total Players");
     printf("===============================================================================================================================\n");
 
-    while (teamCounter != NULL)
+    for(int teamCtr=0; teamCtr<NUMBEROFTEAMS; teamCtr++)
     {
+        teamObject* teamCounter = tempTeams[teamCtr];
         printf("%-5hu\t%-50s\t%-8.2f\t%-6hu\n", teamCounter->teamId, teamCounter->name, teamCounter->averageBattingStrikeRate, teamCounter->totalPlayers);
-        teamCounter = teamCounter->next;
     }
     printf("===============================================================================================================================\n");
 }
@@ -798,7 +694,7 @@ void displayTopKOfSpecificTeam()
         return;
     }
 
-    roleNode *rolePlayers;
+    roleNode *rolePlayers=NULL;
 
     if (playerRole == BATSMAN)
     {
@@ -944,36 +840,22 @@ void displayAllPlayersOfSpecificRole()
 
     roleNode *tempLists[NUMBEROFTEAMS];
     int t = 0;
-    teamObject *team = teamsHead;
 
-    while (team)
-    {
+     for (int teamCtr = 0; teamCtr < NUMBEROFTEAMS; ++teamCtr) {
         int err = 0;
         roleNode *cloned = NULL;
-        if (playerRole == BATSMAN)
-            cloned = cloneList(team->batsmanStart, &err);
-        else if (playerRole == BOWLER)
-            cloned = cloneList(team->bowlerStart, &err);
-        else
-            cloned = cloneList(team->allRounderStart, &err);
+        if (playerRole == BATSMAN) cloned = cloneList(teamsArr[teamCtr].batsmanStart, &err);
+        else if (playerRole == BOWLER) cloned = cloneList(teamsArr[teamCtr].bowlerStart, &err);
+        else cloned = cloneList(teamsArr[teamCtr].allRounderStart, &err);
 
-        if (err != 0)
-        {
-            for (int k = 0; k < t; ++k)
-            {
+        if (err != 0) {
+            for (int k = 0; k < t; ++k) {
                 roleNode *r = tempLists[k];
-                while (r)
-                {
-                    roleNode *n = r->next;
-                    free(r);
-                    r = n;
-                }
+                while (r) { roleNode *nx = r->next; free(r); r = nx; }
             }
             return;
         }
-
         tempLists[t++] = cloned;
-        team = team->next;
     }
 
     roleNode *merged = mergeKRoleLists(tempLists, t);
@@ -1012,19 +894,13 @@ void displayAllPlayersOfSpecificRole()
 
 int main()
 {
-    int error = 0;
-    initializeTeams(&error);
-    if (error != 0)
-    {
-        freeTeams();
-        return -1;
-    }
+    initializeTeamsArr();
 
-    error = 0;
+    int error = 0;
     initializePlayers(&error);
     if (error == -1)
     {
-        freeTeams();
+        freePlayers();
         return -1;
     }
 
@@ -1036,7 +912,7 @@ int main()
         printf("1. Add Player to Team\n2. Display Players of a Specific Team\n3. Display Teams by Average Batting Strike Rate\n4. Display Top K Players of a Specific Team by Role\n5. Display all Players of specific role Across All Teams by performance index\n6. Exit\n");
         printf("==============================================================================\n");
 
-        short int choice = getIntInput("Enter your choice: ");
+        short int choice = (short int)getIntInput("Enter your choice: ");
 
         switch (choice)
         {
@@ -1062,7 +938,7 @@ int main()
 
         case 6:
             printf("Releasing memory.\n");
-            freeTeams();
+            freePlayers();
             exit(0);
 
         default:
