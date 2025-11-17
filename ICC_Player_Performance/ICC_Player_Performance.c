@@ -46,7 +46,6 @@ typedef struct teamObject
     unsigned short totalPlayers;
     float averageBattingStrikeRate;
     unsigned short battingPlayers;
-    // struct teamObject *next;
     struct playerObject *playersStart;
     roleNode *batsmanStart;
     roleNode *bowlerStart;
