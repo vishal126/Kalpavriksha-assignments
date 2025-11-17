@@ -425,6 +425,7 @@ void initializePlayers(int *error)
 
             if (*error != 0)
             {
+                freePlayers();
                 return;
             }
         }
@@ -544,6 +545,7 @@ void addPlayerToTeam(playerData player, int *error)
 
     if (*error != 0)
     {
+        freePlayers();
         return;
     }
 
