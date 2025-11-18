@@ -33,12 +33,6 @@ typedef struct playerObject
     struct playerObject *next;
 } playerObject;
 
-typedef struct roleNode
-{
-    struct playerObject *player;
-    struct roleNode *next;
-} roleNode;
-
 typedef struct teamObject
 {
     unsigned short teamId;
@@ -46,24 +40,14 @@ typedef struct teamObject
     unsigned short totalPlayers;
     float averageBattingStrikeRate;
     unsigned short battingPlayers;
-    struct playerObject *playersStart;
-    roleNode *batsmanStart;
-    roleNode *bowlerStart;
-    roleNode *allRounderStart;
+    playerObject *batsmanStart;
+    playerObject *bowlerStart;
+    playerObject *allRounderStart;
+    // struct playerObject *playersStart;
+    // roleNode *batsmanStart;
+    // roleNode *bowlerStart;
+    // roleNode *allRounderStart;
 } teamObject;
-
-typedef struct playerData
-{
-    unsigned short teamId;
-    unsigned short playerId;
-    char playerName[MAXNAMELENGTH + 1];
-    enum Role playerRole;
-    unsigned int playerTotalRuns;
-    float playerBattingAverage;
-    float playerStrikeRate;
-    unsigned int playerWickets;
-    float playerEconomyRate;
-} playerData;
 
 teamObject teamsArr[NUMBEROFTEAMS];
 teamObject *teamPointer[NUMBEROFTEAMS];
@@ -163,39 +147,30 @@ float getPerformanceIndex(const char *role, const float battingAverage, const fl
 
 void freePlayers()
 {
-    for(int teamCounter = 0; teamCounter<NUMBEROFTEAMS; teamCounter++)
+    for (int teamCounter = 0; teamCounter < NUMBEROFTEAMS; teamCounter++)
     {
-        playerObject *playerCounter = teamsArr[teamCounter].playersStart;
-        while (playerCounter)
-        {
-            playerObject *nextPlayer = playerCounter->next;
-            free(playerCounter);
-            playerCounter = nextPlayer;
-        }
-        teamsArr[teamCounter].playersStart = NULL;
-
-        roleNode *batsmanCounter = teamsArr[teamCounter].batsmanStart;
+        playerObject *batsmanCounter = teamsArr[teamCounter].batsmanStart;
         while (batsmanCounter)
         {
-            roleNode *nextBatsman = batsmanCounter->next;
+            playerObject *nextBatsman = batsmanCounter->next;
             free(batsmanCounter);
             batsmanCounter = nextBatsman;
         }
         teamsArr[teamCounter].batsmanStart = NULL;
 
-        roleNode *bowlerCounter = teamsArr[teamCounter].bowlerStart;
+        playerObject *bowlerCounter = teamsArr[teamCounter].bowlerStart;
         while (bowlerCounter)
         {
-            roleNode *nextBowler = bowlerCounter->next;
+            playerObject *nextBowler = bowlerCounter->next;
             free(bowlerCounter);
             bowlerCounter = nextBowler;
         }
         teamsArr[teamCounter].bowlerStart = NULL;
 
-        roleNode *allRounderCounter = teamsArr[teamCounter].allRounderStart;
+        playerObject *allRounderCounter = teamsArr[teamCounter].allRounderStart;
         while (allRounderCounter)
         {
-            roleNode *nextAllRounder = allRounderCounter->next;
+            playerObject *nextAllRounder = allRounderCounter->next;
             free(allRounderCounter);
             allRounderCounter = nextAllRounder;
         }
@@ -204,12 +179,13 @@ void freePlayers()
         teamsArr[teamCounter].totalPlayers = 0;
         teamsArr[teamCounter].battingPlayers = 0;
         teamsArr[teamCounter].averageBattingStrikeRate = 0.0f;
-
     }
 }
 
-void initializeTeamsArr() {
-    for (unsigned short teamCtr = 0; teamCtr < NUMBEROFTEAMS; teamCtr++) {
+void initializeTeamsArr()
+{
+    for (unsigned short teamCtr = 0; teamCtr < NUMBEROFTEAMS; teamCtr++)
+    {
 
         teamObject *team = &teamsArr[teamCtr];
         memset(team, 0, sizeof(teamObject));
@@ -221,7 +197,6 @@ void initializeTeamsArr() {
         team->battingPlayers = 0;
         team->averageBattingStrikeRate = 0.0f;
 
-        team->playersStart = NULL;
         team->batsmanStart = NULL;
         team->bowlerStart = NULL;
         team->allRounderStart = NULL;
@@ -230,30 +205,20 @@ void initializeTeamsArr() {
     }
 }
 
-void insertIntoRoleList(roleNode **start, playerObject *player, int *error)
+void insertIntoRoleList(playerObject **start, playerObject *player, int *error)
 {
-    *error=0;
-    roleNode *newNode = malloc(sizeof(roleNode));
-    if (!newNode)
-    {
-        freePlayers();
-        printf("Memory allocation failed!\n");
-        *error = -1;
-        return;
-    }
-    newNode->player = player;
-    newNode->next = NULL;
+    *error = 0;
 
-    roleNode *current = *start;
-    roleNode *previous = NULL;
+    playerObject *current = *start;
+    playerObject *previous = NULL;
 
     if (current == NULL)
     {
-        *start = newNode;
+        *start = player;
         return;
     }
 
-    while (current != NULL && current->player->performanceIndex > player->performanceIndex)
+    while (current != NULL && current->performanceIndex > player->performanceIndex)
     {
         previous = current;
         current = current->next;
@@ -261,58 +226,24 @@ void insertIntoRoleList(roleNode **start, playerObject *player, int *error)
 
     if (previous == NULL)
     {
-        newNode->next = *start;
-        *start = newNode;
+        player->next = *start;
+        *start = player;
         return;
     }
 
     if (current != NULL)
     {
-        previous->next = newNode;
-        newNode->next = current;
+        previous->next = player;
+        player->next = current;
         return;
     }
 
-    previous->next = newNode;
-}
-
-void InsertNodeSorted(teamObject *team, playerObject *node)
-{
-    playerObject *cur = team->playersStart;
-    playerObject *prev = NULL;
-
-    if (cur == NULL)
-    {
-        team->playersStart = node;  
-    }
-    else
-    {
-        while (cur && cur->performanceIndex > node->performanceIndex)
-        {
-            prev = cur;
-            cur = cur->next;
-        }
-
-        if (prev == NULL)
-        {
-            node->next = team->playersStart;
-            team->playersStart = node;
-        }
-        else if (cur != NULL)
-        {
-            prev->next = node;
-            node->next = cur;
-        }
-        else
-        {
-            prev->next = node;
-        }
-    }
+    previous->next = player;
 }
 
 void checkAndInsertInRole(playerObject *node, teamObject *team, int *error)
 {
-    *error=0;
+    *error = 0;
     if (getEnumRole(node->role) == BATSMAN)
     {
         insertIntoRoleList(&team->batsmanStart, node, error);
@@ -341,8 +272,8 @@ void checkAndInsertInRole(playerObject *node, teamObject *team, int *error)
 
 void initializePlayers(int *error)
 {
-    *error=0;
-    for(int teamCounter = 0; teamCounter<NUMBEROFTEAMS; teamCounter++)
+    *error = 0;
+    for (int teamCounter = 0; teamCounter < NUMBEROFTEAMS; teamCounter++)
     {
         teamObject *team = &teamsArr[teamCounter];
         float totalStrikeRate = 0.0f;
@@ -392,8 +323,6 @@ void initializePlayers(int *error)
 
             totalPlayers++;
 
-            InsertNodeSorted(team, node);
-
             checkAndInsertInRole(node, team, error);
 
             if (*error != 0)
@@ -415,7 +344,7 @@ void initializePlayers(int *error)
     *error = 0;
 }
 
-teamObject* findTeam(unsigned short teamId)
+teamObject *findTeam(unsigned short teamId)
 {
     if (teamId < 1 || teamId > NUMBEROFTEAMS)
         return NULL;
@@ -423,10 +352,22 @@ teamObject* findTeam(unsigned short teamId)
     return teamPointer[teamId - 1];
 }
 
-void checkForDuplicatePlayerId(const unsigned short playerId, const teamObject *team, int *error)
+void checkForDuplicatePlayerId(const unsigned short playerId, char *role, const teamObject *team, int *error)
 {
     *error = 0;
-    playerObject *playerCounter = team->playersStart;
+    playerObject *playerCounter;
+    if (getEnumRole(role) == BATSMAN)
+    {
+        playerCounter = team->batsmanStart;
+    }
+    else if (getEnumRole(role) == BOWLER)
+    {
+        playerCounter = team->bowlerStart;
+    }
+    else
+    {
+        playerCounter = team->allRounderStart;
+    }
 
     while (playerCounter)
     {
@@ -440,10 +381,10 @@ void checkForDuplicatePlayerId(const unsigned short playerId, const teamObject *
     }
 }
 
-void addPlayerToTeam(playerData player, int *error)
+void addPlayerToTeam(playerObject player, unsigned short teamId, int *error)
 {
     *error = 0;
-    teamObject *team = findTeam(player.teamId);
+    teamObject *team = findTeam(teamId);
     if (!team)
     {
         printf("Team not found\n");
@@ -456,7 +397,7 @@ void addPlayerToTeam(playerData player, int *error)
         return;
     }
 
-    checkForDuplicatePlayerId(player.playerId, team, error);
+    checkForDuplicatePlayerId(player.playerId, player.role, team, error);
     if (*error != 0)
     {
         printf("Player with id %hu exists in team %s\n", player.playerId, team->name);
@@ -474,21 +415,21 @@ void addPlayerToTeam(playerData player, int *error)
     }
 
     tempPlayer->playerId = player.playerId;
-    strcpy(tempPlayer->name, player.playerName);
+    strcpy(tempPlayer->name, player.name);
     strcpy(tempPlayer->teamName, team->name);
 
-    if (player.playerRole == BATSMAN)
+    if (getEnumRole(player.role) == BATSMAN)
         strcpy(tempPlayer->role, "Batsman");
-    else if (player.playerRole == BOWLER)
+    else if (getEnumRole(player.role) == BOWLER)
         strcpy(tempPlayer->role, "Bowler");
     else
         strcpy(tempPlayer->role, "All-rounder");
 
-    tempPlayer->totalRuns = player.playerTotalRuns;
-    tempPlayer->battingAverage = player.playerBattingAverage;
-    tempPlayer->strikeRate = player.playerStrikeRate;
-    tempPlayer->wickets = player.playerWickets;
-    tempPlayer->economyRate = player.playerEconomyRate;
+    tempPlayer->totalRuns = player.totalRuns;
+    tempPlayer->battingAverage = player.battingAverage;
+    tempPlayer->strikeRate = player.strikeRate;
+    tempPlayer->wickets = player.wickets;
+    tempPlayer->economyRate = player.economyRate;
 
     tempPlayer->performanceIndex = getPerformanceIndex(tempPlayer->role,
                                                        tempPlayer->battingAverage,
@@ -498,7 +439,7 @@ void addPlayerToTeam(playerData player, int *error)
 
     tempPlayer->next = NULL;
 
-    InsertNodeSorted(team, tempPlayer);
+    // InsertNodeSorted(team, tempPlayer);
 
     checkAndInsertInRole(tempPlayer, team, error);
 
@@ -564,22 +505,34 @@ enum Role getPlayerRole(const char *prompt)
 
 void addPlayer()
 {
-    playerData player;
+    playerObject player;
 
-    player.teamId = getId("Enter Team ID to add player: ");
+    unsigned short teamId = getId("Enter Team ID to add player: ");
     printf("Enter Player Details: \n");
     player.playerId = getId("Player ID: ");
-    getPlayerName(player.playerName);
-    player.playerRole = getPlayerRole("Role (1-Batsman, 2-Bowler, 3-All-rounder): ");
-    player.playerTotalRuns = getIntInput("Total Runs: ");
-    player.playerBattingAverage = getFloatInput("Batting Average: ");
-    player.playerStrikeRate = getFloatInput("Strike Rate: ");
-    player.playerWickets = getIntInput("Wickets: ");
-    player.playerEconomyRate = getFloatInput("Ecomomy Rate: ");
+    getPlayerName(player.name);
+    enum Role role = getPlayerRole("Role (1-Batsman, 2-Bowler, 3-All-rounder): ");
+    if (role == BATSMAN)
+    {
+        strcpy(player.role, "Batsman");
+    }
+    else if (role == BOWLER)
+    {
+        strcpy(player.role, "Bowler");
+    }
+    else
+    {
+        strcpy(player.role, "All-Rounder");
+    }
+    player.totalRuns = getIntInput("Total Runs: ");
+    player.battingAverage = getFloatInput("Batting Average: ");
+    player.strikeRate = getFloatInput("Strike Rate: ");
+    player.wickets = getIntInput("Wickets: ");
+    player.economyRate = getFloatInput("Ecomomy Rate: ");
 
     int error = 0;
 
-    addPlayerToTeam(player, &error);
+    addPlayerToTeam(player, teamId, &error);
     if (error != 0)
     {
         return;
@@ -598,32 +551,48 @@ void displayPlayersOfSpecificTeam()
         return;
     }
 
-    if (team->playersStart == NULL)
+    if (team->batsmanStart == NULL && team->allRounderStart == NULL && team->bowlerStart == NULL)
     {
         printf("No player exists in team: %s!\n", team->name);
         return;
     }
 
-    playerObject *playerCounter = team->playersStart;
-
     printf("Players of Team %s:\n", team->name);
     printf("===============================================================================================================================\n");
     printf("%-5s %-50s %-12s %-6s %-8s %-8s %-6s %-6s %-10s\n", "ID", "Name", "Role", "Runs", "Avg", "SR", "Wkts", "ER", "Perf.Index");
     printf("===============================================================================================================================\n");
-    while (playerCounter != NULL)
-    {
-        printf("%-5hu %-50s %-12s %-6u %-8.2f %-8.2f %-6u %-6.2f %-10.2f\n",
-               playerCounter->playerId,
-               playerCounter->name,
-               playerCounter->role,
-               playerCounter->totalRuns,
-               playerCounter->battingAverage,
-               playerCounter->strikeRate,
-               playerCounter->wickets,
-               playerCounter->economyRate,
-               playerCounter->performanceIndex);
 
-        playerCounter = playerCounter->next;
+    playerObject *playerCounter = NULL;
+    for (int printCounter = 0; printCounter < 3; printCounter++)
+    {
+        if (printCounter == 0)
+        {
+            playerCounter = team->batsmanStart;
+        }
+        else if (printCounter == 1)
+        {
+            playerCounter = team->bowlerStart;
+        }
+        else
+        {
+            playerCounter = team->allRounderStart;
+        }
+
+        while (playerCounter != NULL)
+        {
+            printf("%-5hu %-50s %-12s %-6u %-8.2f %-8.2f %-6u %-6.2f %-10.2f\n",
+                   playerCounter->playerId,
+                   playerCounter->name,
+                   playerCounter->role,
+                   playerCounter->totalRuns,
+                   playerCounter->battingAverage,
+                   playerCounter->strikeRate,
+                   playerCounter->wickets,
+                   playerCounter->economyRate,
+                   playerCounter->performanceIndex);
+
+            playerCounter = playerCounter->next;
+        }
     }
 
     printf("===============================================================================================================================\n");
@@ -633,19 +602,23 @@ void displayPlayersOfSpecificTeam()
     printf("\n");
 }
 
-int compareTeams(const void *a, const void *b) {
-    const teamObject *t1 = *(const teamObject * const *)a;
-    const teamObject *t2 = *(const teamObject * const *)b;
-    if (t1->averageBattingStrikeRate > t2->averageBattingStrikeRate) return -1;
-    if (t1->averageBattingStrikeRate < t2->averageBattingStrikeRate) return 1;
+int compareTeams(const void *a, const void *b)
+{
+    const teamObject *t1 = *(const teamObject *const *)a;
+    const teamObject *t2 = *(const teamObject *const *)b;
+    if (t1->averageBattingStrikeRate > t2->averageBattingStrikeRate)
+        return -1;
+    if (t1->averageBattingStrikeRate < t2->averageBattingStrikeRate)
+        return 1;
     return 0;
 }
 
 void displayTeamsByAverageBattingStrikeRate()
 {
-    teamObject* tempTeams[NUMBEROFTEAMS];
+    teamObject *tempTeams[NUMBEROFTEAMS];
 
-    for(int teamCtr=0; teamCtr<NUMBEROFTEAMS; teamCtr++) {
+    for (int teamCtr = 0; teamCtr < NUMBEROFTEAMS; teamCtr++)
+    {
         tempTeams[teamCtr] = &teamsArr[teamCtr];
     }
 
@@ -656,15 +629,15 @@ void displayTeamsByAverageBattingStrikeRate()
     printf("%-5s %-50s %-8s %-6s\n", "ID", "Team Name", "Avg Bat SR", "Total Players");
     printf("===============================================================================================================================\n");
 
-    for(int teamCtr=0; teamCtr<NUMBEROFTEAMS; teamCtr++)
+    for (int teamCtr = 0; teamCtr < NUMBEROFTEAMS; teamCtr++)
     {
-        teamObject* teamCounter = tempTeams[teamCtr];
+        teamObject *teamCounter = tempTeams[teamCtr];
         printf("%-5hu\t%-50s\t%-8.2f\t%-6hu\n", teamCounter->teamId, teamCounter->name, teamCounter->averageBattingStrikeRate, teamCounter->totalPlayers);
     }
     printf("===============================================================================================================================\n");
 }
 
-void checkForKPlayers(roleNode *rolePlayers, unsigned short K, int *error)
+void checkForKPlayers(playerObject *rolePlayers, unsigned short K, int *error)
 {
     *error = 0;
     unsigned short count = 0;
@@ -693,7 +666,7 @@ void displayTopKOfSpecificTeam()
         return;
     }
 
-    roleNode *rolePlayers=NULL;
+    playerObject *rolePlayers = NULL;
 
     if (playerRole == BATSMAN)
     {
@@ -728,7 +701,7 @@ void displayTopKOfSpecificTeam()
     unsigned short count = 0;
     while (rolePlayers != NULL && count < K)
     {
-        playerObject *player = rolePlayers->player;
+        playerObject *player = rolePlayers;
         printf("%-5hu %-50s %-12s %-8u %-8.2f %-8.2f %-8u %-8.2f %-8.2f\n",
                player->playerId,
                player->name,
@@ -746,30 +719,40 @@ void displayTopKOfSpecificTeam()
     printf("===============================================================================================================================\n");
 }
 
-roleNode *cloneList(roleNode *head, int *error)
+playerObject *cloneList(playerObject *head, int *error)
 {
     *error = 0;
-    roleNode *newHead = NULL;
-    roleNode *newTail = NULL;
+    playerObject *newHead = NULL;
+    playerObject *newTail = NULL;
 
     while (head)
     {
-        roleNode *newNode = malloc(sizeof(roleNode));
+        playerObject *newNode = malloc(sizeof(playerObject));
+        newNode->battingAverage = head->battingAverage;
+        newNode->economyRate = head->economyRate;
+        strcpy(newNode->name, head->name);
+        newNode->performanceIndex = head->performanceIndex;
+        newNode->playerId = head->playerId;
+        strcpy(newNode->role, head->role);
+        newNode->strikeRate = head->strikeRate;
+        strcpy(newNode->teamName, head->teamName);
+        newNode->totalRuns = head->totalRuns;
+        newNode->wickets = head->wickets;
         if (!newNode)
         {
             printf("Memory allocation failed while cloning list.\n");
             *error = -1;
 
-            roleNode *tmp = newHead;
+            playerObject *tmp = newHead;
             while (tmp)
             {
-                roleNode *n = tmp->next;
+                playerObject *n = tmp->next;
                 free(tmp);
                 tmp = n;
             }
             return NULL;
         }
-        newNode->player = head->player;
+        // newNode->player = head->player;
         newNode->next = NULL;
 
         if (!newHead)
@@ -785,15 +768,15 @@ roleNode *cloneList(roleNode *head, int *error)
     return newHead;
 }
 
-roleNode *mergeTwoRoleLists(roleNode *A, roleNode *B)
+playerObject *mergeTwoRoleLists(playerObject *A, playerObject *B)
 {
-    roleNode dummy;
-    roleNode *tail = &dummy;
+    playerObject dummy;
+    playerObject *tail = &dummy;
     dummy.next = NULL;
 
     while (A && B)
     {
-        if (A->player->performanceIndex >= B->player->performanceIndex)
+        if (A->performanceIndex >= B->performanceIndex)
         {
             tail->next = A;
             A = A->next;
@@ -810,7 +793,7 @@ roleNode *mergeTwoRoleLists(roleNode *A, roleNode *B)
     return dummy.next;
 }
 
-roleNode *mergeKRoleLists(roleNode *lists[], int t)
+playerObject *mergeKRoleLists(playerObject *lists[], int t)
 {
     if (t == 0)
         return NULL;
@@ -837,37 +820,48 @@ void displayAllPlayersOfSpecificRole()
 {
     enum Role playerRole = getPlayerRole("Enter Role (1-Batsman, 2-Bowler, 3-All-rounder): ");
 
-    roleNode *tempLists[NUMBEROFTEAMS];
+    playerObject *tempLists[NUMBEROFTEAMS];
     int t = 0;
 
-     for (int teamCtr = 0; teamCtr < NUMBEROFTEAMS; ++teamCtr) {
+    for (int teamCtr = 0; teamCtr < NUMBEROFTEAMS; ++teamCtr)
+    {
         int err = 0;
-        roleNode *cloned = NULL;
-        if (playerRole == BATSMAN) cloned = cloneList(teamsArr[teamCtr].batsmanStart, &err);
-        else if (playerRole == BOWLER) cloned = cloneList(teamsArr[teamCtr].bowlerStart, &err);
-        else cloned = cloneList(teamsArr[teamCtr].allRounderStart, &err);
+        playerObject *cloned = NULL;
+        if (playerRole == BATSMAN)
+            cloned = cloneList(teamsArr[teamCtr].batsmanStart, &err);
+        else if (playerRole == BOWLER)
+            cloned = cloneList(teamsArr[teamCtr].bowlerStart, &err);
+        else
+            cloned = cloneList(teamsArr[teamCtr].allRounderStart, &err);
 
-        if (err != 0) {
-            for (int k = 0; k < t; ++k) {
-                roleNode *r = tempLists[k];
-                while (r) { roleNode *nx = r->next; free(r); r = nx; }
+        if (err != 0)
+        {
+            for (int k = 0; k < t; ++k)
+            {
+                playerObject *r = tempLists[k];
+                while (r)
+                {
+                    playerObject *nx = r->next;
+                    free(r);
+                    r = nx;
+                }
             }
             return;
         }
         tempLists[t++] = cloned;
     }
 
-    roleNode *merged = mergeKRoleLists(tempLists, t);
+    playerObject *merged = mergeKRoleLists(tempLists, t);
 
     printf("All players for this role across all teams:\n");
     printf("===============================================================================================================================\n");
     printf("%-5s %-50s %-12s %-8s %-8s %-8s %-8s %-8s %-8s\n", "ID", "Name", "Role", "Runs", "Avg", "SR", "Wkts", "ER", "Perf. Index");
     printf("===============================================================================================================================\n");
 
-    roleNode *playerMerged = merged;
+    playerObject *playerMerged = merged;
     while (playerMerged)
     {
-        playerObject *player = playerMerged->player;
+        playerObject *player = playerMerged;
         printf("%-5hu %-50s %-12s %-8u %-8.2f %-8.2f %-8u %-8.2f %-8.2f\n",
                player->playerId,
                player->name,
@@ -885,7 +879,7 @@ void displayAllPlayersOfSpecificRole()
     playerMerged = merged;
     while (playerMerged)
     {
-        roleNode *next = playerMerged->next;
+        playerObject *next = playerMerged->next;
         free(playerMerged);
         playerMerged = next;
     }
