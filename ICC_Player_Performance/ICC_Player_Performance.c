@@ -43,10 +43,6 @@ typedef struct teamObject
     playerObject *batsmanStart;
     playerObject *bowlerStart;
     playerObject *allRounderStart;
-    // struct playerObject *playersStart;
-    // roleNode *batsmanStart;
-    // roleNode *bowlerStart;
-    // roleNode *allRounderStart;
 } teamObject;
 
 teamObject teamsArr[NUMBEROFTEAMS];
