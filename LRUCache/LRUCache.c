@@ -23,7 +23,6 @@ typedef struct hashNode
 
 enum Commands
 {
-    CREATECACHE,
     PUT,
     GET,
     EXIT,
@@ -40,7 +39,34 @@ typedef struct LRUCache
     unsigned short hashTableSize;
 } LRUCache;
 
-LRUCache cache;
+unsigned short getIntInput(const char *prompt)
+{
+    char buffer[100];
+    unsigned short value;
+    while (1)
+    {
+        printf("%s", prompt);
+        if (fgets(buffer, sizeof(buffer), stdin) != NULL)
+        {
+            buffer[strcspn(buffer, "\n")] = 0;
+
+            if (sscanf(buffer, "%hu", &value) == 1)
+            {
+                return value;
+            }
+            else
+            {
+                printf("Invalid input. Please enter a valid integer.\n");
+            }
+        }
+        else
+        {
+            printf("Error reading input. Try again.\n");
+        }
+    }
+
+    return 0;
+}
 
 bool isPrime(unsigned short primeNumber)
 {
@@ -73,104 +99,91 @@ unsigned short getNextPrime(unsigned short capacity)
     return primeNumber;
 }
 
-void createCache(char *capacity)
+void createCache(unsigned short capacity, LRUCache **cache, int *responseCode)
 {
-    cache.front = cache.rear = NULL;
-
-    if (cache.cacheCapacity != 0)
-    {
-        printf("ERROR cache already initialized with size %hu!\n", cache.cacheCapacity);
-        return;
-    }
-    unsigned short intCapacity;
-    if (sscanf(capacity, "%hu", &intCapacity) != 1)
-    {
-        printf("Invalid Capacity!\n");
-        return;
-    }
-
-    if (intCapacity < MIN_CAPACITY || intCapacity > MAX_CAPACITY)
-    {
-        printf("Capacity is not in range(1-1000)!\n");
-        return;
-    }
-
-    cache.cacheCapacity = intCapacity;
-    cache.cacheSize = 0;
-
-    cache.hashTableSize = getNextPrime(intCapacity * 2);
-
-    cache.hashMap = malloc(cache.hashTableSize * sizeof(hashNode *));
-
-    if (!cache.hashMap)
+    *cache = malloc(sizeof(LRUCache));
+    if (!*cache)
     {
         printf("Memory allocation failed!\n");
-        cache.cacheCapacity = 0;
-        cache.hashTableSize = 0;
-        cache.hashMap = NULL;
+        *responseCode = -1;
         return;
     }
 
-    for (int hashMapCounter = 0; hashMapCounter < cache.hashTableSize; hashMapCounter++)
+    (*cache)->front = (*cache)->rear = NULL;
+
+    (*cache)->cacheCapacity = capacity;
+    (*cache)->cacheSize = 0;
+
+    (*cache)->hashTableSize = getNextPrime(capacity * 2);
+
+    (*cache)->hashMap = malloc((*cache)->hashTableSize * sizeof(hashNode *));
+    if (!(*cache)->hashMap)
     {
-        cache.hashMap[hashMapCounter] = NULL;
+        printf("Memory allocation failed!\n");
+        *responseCode = -1;
+        free(*cache);
+        (*cache) = NULL;
+        return;
     }
 
-    printf("Cache created successfully with size %hu\n", intCapacity);
+    for (int hashMapCounter = 0; hashMapCounter < (*cache)->hashTableSize; hashMapCounter++)
+    {
+        (*cache)->hashMap[hashMapCounter] = NULL;
+    }
 }
 
-int hashFunction(int key)
+int hashFunction(int key, LRUCache *cache)
 {
-    return (key % cache.hashTableSize + cache.hashTableSize) % cache.hashTableSize;
+    return (key % cache->hashTableSize + cache->hashTableSize) % cache->hashTableSize;
 }
 
-void addNodeToQueue(node *tempNode)
+void addNodeToQueue(node *tempNode, LRUCache *cache)
 {
     tempNode->prev = NULL;
     tempNode->next = NULL;
 
-    if (cache.front == NULL)
+    if (cache->front == NULL)
     {
-        cache.front = cache.rear = tempNode;
+        cache->front = cache->rear = tempNode;
     }
     else
     {
-        tempNode->next = cache.front;
-        cache.front->prev = tempNode;
-        cache.front = tempNode;
+        tempNode->next = cache->front;
+        cache->front->prev = tempNode;
+        cache->front = tempNode;
     }
-    cache.cacheSize++;
+    cache->cacheSize++;
 }
 
-void removeNode()
+void removeNode(LRUCache *cache)
 {
-    if (cache.rear == NULL)
+    if (cache->rear == NULL)
         return;
 
-    node *toDelete = cache.rear;
+    node *toDelete = cache->rear;
 
-    if (cache.rear == cache.front)
+    if (cache->rear == cache->front)
     {
-        cache.front = cache.rear = NULL;
+        cache->front = cache->rear = NULL;
     }
     else
     {
-        cache.rear = cache.rear->prev;
-        cache.rear->next = NULL;
+        cache->rear = cache->rear->prev;
+        cache->rear->next = NULL;
     }
 
     if (toDelete->value)
         free(toDelete->value);
     free(toDelete);
 
-    if (cache.cacheSize > 0)
-        cache.cacheSize--;
+    if (cache->cacheSize > 0)
+        cache->cacheSize--;
 }
 
-void removeHashNode(int key)
+void removeHashNode(int key, LRUCache *cache)
 {
-    int index = hashFunction(key);
-    hashNode *curr = cache.hashMap[index];
+    int index = hashFunction(key, cache);
+    hashNode *curr = cache->hashMap[index];
     hashNode *prev = NULL;
 
     while (curr != NULL && curr->key != key)
@@ -186,7 +199,7 @@ void removeHashNode(int key)
 
     if (prev == NULL)
     {
-        cache.hashMap[index] = curr->next;
+        cache->hashMap[index] = curr->next;
     }
     else
     {
@@ -197,9 +210,9 @@ void removeHashNode(int key)
     return;
 }
 
-void adjustQueueNode(node *adjustNode)
+void adjustQueueNode(node *adjustNode, LRUCache *cache)
 {
-    if (!adjustNode || cache.front == adjustNode)
+    if (!adjustNode || cache->front == adjustNode)
         return;
 
     if (adjustNode->prev)
@@ -207,28 +220,28 @@ void adjustQueueNode(node *adjustNode)
     if (adjustNode->next)
         adjustNode->next->prev = adjustNode->prev;
 
-    if (adjustNode == cache.rear)
+    if (adjustNode == cache->rear)
     {
-        cache.rear = adjustNode->prev;
+        cache->rear = adjustNode->prev;
     }
 
     adjustNode->prev = NULL;
-    adjustNode->next = cache.front;
-    if (cache.front)
-        cache.front->prev = adjustNode;
-    cache.front = adjustNode;
+    adjustNode->next = cache->front;
+    if (cache->front)
+        cache->front->prev = adjustNode;
+    cache->front = adjustNode;
 
-    if (cache.rear == NULL)
-        cache.rear = cache.front;
+    if (cache->rear == NULL)
+        cache->rear = cache->front;
 }
 
-void checkCacheCapacity()
+void checkCacheCapacity(LRUCache *cache)
 {
-    if (cache.cacheSize >= cache.cacheCapacity)
+    if (cache->cacheSize >= cache->cacheCapacity)
     {
-        int keyToDelete = cache.rear->key;
-        removeNode();
-        removeHashNode(keyToDelete);
+        int keyToDelete = cache->rear->key;
+        removeNode(cache);
+        removeHashNode(keyToDelete, cache);
     }
 }
 
@@ -254,113 +267,102 @@ node *initializeNode(int key, char *value)
     return tempNode;
 }
 
-void put(char *key, char *value)
+int insertNewKey(LRUCache *cache, int index, int intKey, char *value)
 {
-    if (cache.cacheCapacity == 0)
+    node *tempNode = initializeNode(intKey, value);
+    if (!tempNode)
     {
-        printf("ERROR: Cache not initialized!\n");
-        return;
+        return 0;
     }
 
-    int intKey;
-    sscanf(key, "%d", &intKey);
-
-    int index = hashFunction(intKey);
-
-    if (cache.hashMap[index] == NULL)
+    hashNode *tempHashNode = malloc(sizeof(hashNode));
+    if (!tempHashNode)
     {
-        checkCacheCapacity();
-
-        cache.hashMap[index] = malloc(sizeof(hashNode));
-        if (!cache.hashMap[index])
-        {
-            printf("Memory allocation failed!\n");
-            cache.hashMap[index] = NULL;
-            return;
-        }
-        cache.hashMap[index]->key = intKey;
-        cache.hashMap[index]->next = NULL;
-
-        node *tempNode = initializeNode(intKey, value);
-        if (!tempNode)
-        {
-            free(cache.hashMap[index]);
-            return;
-        }
-        cache.hashMap[index]->queueNode = tempNode;
-
-        addNodeToQueue(tempNode);
-    }
-    else
-    {
-        hashNode *curr = cache.hashMap[index];
-        while (curr != NULL && curr->key != intKey)
-        {
-            curr = curr->next;
-        }
-
-        if (curr != NULL)
-        {
-            char *tempValue = realloc(curr->queueNode->value, strlen(value) + 1);
-            if (!tempValue)
-            {
-                printf("Memory reallocation failed!\n");
-                return;
-            }
-            curr->queueNode->value = tempValue;
-            strcpy(curr->queueNode->value, value);
-            adjustQueueNode(curr->queueNode);
-            return;
-        }
-
-        checkCacheCapacity();
-
-        hashNode *tempHashNode = malloc(sizeof(hashNode));
-        if (!tempHashNode)
-        {
-            printf("Memory allocation failed!\n");
-            return;
-        }
-        tempHashNode->queueNode = NULL;
-        tempHashNode->next = cache.hashMap[index];
-        cache.hashMap[index] = tempHashNode;
-        tempHashNode->key = intKey;
-
-        node *tempNode = initializeNode(intKey, value);
-        if (!tempNode)
-        {
-            cache.hashMap[index] = tempHashNode->next;
-            free(tempHashNode);
-            return;
-        }
-        tempHashNode->queueNode = tempNode;
-
-        addNodeToQueue(tempNode);
+        printf("Memory allocation failed!\n");
+        if (tempNode->value)
+            free(tempNode->value);
+        free(tempNode);
+        return 0;
     }
 
-    printf("PUT operation successful with key %hu value \"%s\"\n", intKey, value);
+    tempHashNode->key = intKey;
+    tempHashNode->queueNode = tempNode;
+    tempHashNode->next = cache->hashMap[index];
+    cache->hashMap[index] = tempHashNode;
+
+    addNodeToQueue(tempNode, cache);
+    return 1;
 }
 
-void get(char *key)
+void put(char *key, char *value, LRUCache *cache)
 {
-    if (cache.cacheCapacity == 0)
+    if (cache->cacheCapacity == 0)
     {
         printf("ERROR: Cache not initialized!\n");
         return;
     }
 
     int intKey;
-    sscanf(key, "%d", &intKey);
+    if (sscanf(key, "%d", &intKey) != 1)
+    {
+        printf("Invalid key! Key must be an integer.\n");
+        return;
+    }
 
-    int index = hashFunction(intKey);
+    int index = hashFunction(intKey, cache);
 
-    if (cache.hashMap[index] == NULL)
+    hashNode *curr = cache->hashMap[index];
+    while (curr != NULL && curr->key != intKey)
+    {
+        curr = curr->next;
+    }
+
+    if (curr != NULL)
+    {
+        char *tempValue = realloc(curr->queueNode->value, strlen(value) + 1);
+        if (!tempValue)
+        {
+            printf("Memory reallocation failed!\n");
+            return;
+        }
+        curr->queueNode->value = tempValue;
+        strcpy(curr->queueNode->value, value);
+        adjustQueueNode(curr->queueNode, cache);
+        return;
+    }
+
+    checkCacheCapacity(cache);
+
+    if (!insertNewKey(cache, index, intKey, value))
+    {
+        return;
+    }
+}
+
+void get(char *key, LRUCache *cache)
+{
+    if (cache->cacheCapacity == 0)
+    {
+        printf("ERROR: Cache not initialized!\n");
+        return;
+    }
+
+    int intKey;
+    if (sscanf(key, "%d", &intKey) != 1)
+    {
+        printf("Invalid key! Key must be an integer.\n");
+        return;
+    }
+
+    int index = hashFunction(intKey, cache);
+
+    if (cache->hashMap[index] == NULL)
     {
         printf("No Value exists for key %d!\n", intKey);
     }
     else
     {
-        hashNode *curr = cache.hashMap[index];
+        hashNode *curr = cache->hashMap[index];
 
         while (curr != NULL && curr->key != intKey)
         {
@@ -374,17 +376,13 @@ void get(char *key)
         }
 
         printf("%s\n", curr->queueNode->value);
-        adjustQueueNode(curr->queueNode);
+        adjustQueueNode(curr->queueNode, cache);
     }
 }
 
 enum Commands getEnumCommand(char *commandValue)
 {
-    if (stricmp(commandValue, "createCache") == 0)
-    {
-        return CREATECACHE;
-    }
-    else if (stricmp(commandValue, "put") == 0)
+    if (stricmp(commandValue, "put") == 0)
     {
         return PUT;
     }
@@ -402,26 +400,26 @@ enum Commands getEnumCommand(char *commandValue)
     }
 }
 
-void checkCommandValidity(char *command, enum Commands type, int *error)
+void checkCommandValidity(const char *command, enum Commands type, int *error)
 {
     unsigned short tokenCount = 0;
+    const char *p = command;
 
-    char *token = strtok(command, " ");
-    while (token)
+    while (*p != '\0')
     {
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        if (*p == '\0')
+            break;
+
         tokenCount++;
-        token = strtok(NULL, " ");
+
+        while (*p != ' ' && *p != '\t' && *p != '\0')
+            p++;
     }
 
-    if (type == CREATECACHE)
-    {
-        if (tokenCount != 2)
-        {
-            *error = -1;
-            return;
-        }
-    }
-    else if (type == PUT)
+    if (type == PUT)
     {
         if (tokenCount < 3)
         {
@@ -450,6 +448,27 @@ void checkCommandValidity(char *command, enum Commands type, int *error)
         *error = -1;
         return;
     }
+}
+
+void getFirstToken(const char *command, char *tokenBuffer, size_t bufSize)
+{
+    size_t i = 0;
+    size_t j = 0;
+
+    while (command[i] == ' ' || command[i] == '\t')
+        i++;
+
+    if (command[i] == '\0')
+    {
+        tokenBuffer[0] = '\0';
+        return;
+    }
+
+    while (command[i] != ' ' && command[i] != '\t' && command[i] != '\0' && j < bufSize - 1)
+    {
+        tokenBuffer[j++] = command[i++];
+    }
+    tokenBuffer[j] = '\0';
 }
 
 char *readLine()
@@ -491,63 +510,45 @@ char *readLine()
     return buffer;
 }
 
-void parseCommand(int *returnCode)
+void parseCommand(int *returnCode, LRUCache *cache)
 {
+    char commandToken[15];
     char *command = readLine();
     if (command == NULL)
     {
         printf("Error while reading Input!\n");
         return;
     }
-    int sizeOfCopyCmd = strlen(command) + 1;
-    char *commandCopy = malloc(sizeOfCopyCmd);
 
-    strcpy(commandCopy, command);
-
-    char *commandValue = strtok(commandCopy, " ");
-    if (!commandValue)
+    getFirstToken(command, commandToken, sizeof(commandToken));
+    if (commandToken[0] == '\0')
     {
         printf("Invalid Command!\n");
         free(command);
-        free(commandCopy);
         return;
     }
-    enum Commands commandType = getEnumCommand(commandValue);
+
+    enum Commands commandType = getEnumCommand(commandToken);
     if (commandType == ERROR)
     {
         printf("Invalid Command!\n");
-        free(commandCopy);
         free(command);
         return;
     }
+
     int error = 0;
-    strcpy(commandCopy, command);
-    checkCommandValidity(commandCopy, commandType, &error);
+    checkCommandValidity(command, commandType, &error);
     if (error != 0)
     {
         printf("Invalid Command!\n");
-        free(commandCopy);
         free(command);
         return;
     }
 
-    commandValue = strtok(command, " ");
-    free(commandCopy);
+    char *commandValue = strtok(command, " ");
+
     switch (commandType)
     {
-    case CREATECACHE:
-    {
-        char *capacity = strtok(NULL, "");
-        if (capacity == NULL)
-        {
-            printf("Invalid command!\n");
-            free(command);
-            return;
-        }
-        createCache(capacity);
-        break;
-    }
-
     case PUT:
     {
         char *key = strtok(NULL, " ");
@@ -558,7 +559,7 @@ void parseCommand(int *returnCode)
             free(command);
             return;
         }
-        put(key, value);
+        put(key, value, cache);
         break;
     }
 
@@ -571,7 +572,7 @@ void parseCommand(int *returnCode)
             free(command);
             return;
         }
-        get(key);
+        get(key, cache);
         break;
     }
 
@@ -592,26 +593,26 @@ void parseCommand(int *returnCode)
     free(command);
 }
 
-void freeMemory()
+void freeMemory(LRUCache *cache)
 {
-    if (cache.hashMap)
+    if (cache->hashMap)
     {
-        for (int i = 0; i < cache.hashTableSize; ++i)
+        for (int i = 0; i < cache->hashTableSize; ++i)
         {
-            hashNode *h = cache.hashMap[i];
+            hashNode *h = cache->hashMap[i];
             while (h)
             {
                 hashNode *tmp = h;
                 h = h->next;
                 free(tmp);
             }
-            cache.hashMap[i] = NULL;
+            cache->hashMap[i] = NULL;
         }
-        free(cache.hashMap);
-        cache.hashMap = NULL;
+        free(cache->hashMap);
+        cache->hashMap = NULL;
     }
 
-    node *cur = cache.front;
+    node *cur = cache->front;
     while (cur)
     {
         node *tmp = cur;
@@ -620,38 +621,48 @@ void freeMemory()
             free(tmp->value);
         free(tmp);
     }
-    cache.front = cache.rear = NULL;
 
-    cache.cacheSize = 0;
-    cache.cacheCapacity = 0;
-    cache.hashTableSize = 0;
+    free(cache);
+}
+
+void initializeCache(LRUCache **cache, int *responseCode)
+{
+    unsigned short cacheSizeInput = getIntInput("Enter size of cache: ");
+
+    while (cacheSizeInput < MIN_CAPACITY || cacheSizeInput > MAX_CAPACITY)
+    {
+        printf("Enter size in range(1-1000): ");
+        cacheSizeInput = getIntInput("Enter size of cache: ");
+    }
+
+    createCache(cacheSizeInput, cache, responseCode);
 }
 
 int main()
 {
-    cache.cacheCapacity = 0;
-    cache.cacheSize = 0;
-    cache.front = NULL;
-    cache.hashMap = NULL;
-    cache.hashTableSize = 0;
-    cache.rear = NULL;
-
     int returnCode = 0;
+    LRUCache *cache = NULL;
+    initializeCache(&cache, &returnCode);
+    if (returnCode == -1)
+    {
+        return -1;
+    }
+
+    returnCode = 0;
     while (1)
     {
 
         printf("\nOperations:(CASE-INSENSITIVE)\n");
-        printf("createcache <size>\n");
         printf("put <key> <value>\n");
         printf("get <key>\n");
         printf("exit\n\n");
         printf("Enter command: ");
 
-        parseCommand(&returnCode);
+        parseCommand(&returnCode, cache);
 
         if (returnCode == -1)
         {
-            freeMemory();
+            freeMemory(cache);
             printf("Releasing Memory!");
             exit(0);
         }
