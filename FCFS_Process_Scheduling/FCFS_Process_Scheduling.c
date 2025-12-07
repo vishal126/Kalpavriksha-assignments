@@ -75,7 +75,7 @@ void freeTempPcb(Pcb **pcbToFree)
 HashNode *initializeHashNode(Pcb *pcbDetails)
 {
     HashNode *tempNode = (HashNode *)malloc(sizeof(HashNode));
-    if (tempNode == NULL)
+    if (!tempNode)
     {
         printf("Memory allocation failed!\n");
         return NULL;
@@ -373,7 +373,6 @@ char *rtrim(char *inputLine)
 
 bool readInput(FCFS **details)
 {
-    printf("Press only enter(\\n) to end taking Input: \n");
     while (1)
     {
         char *rawLine = readLine();
@@ -392,6 +391,9 @@ bool readInput(FCFS **details)
 
         size_t len = strcspn(inputLine, " ");
         char *command = malloc(len + 1);
+        if(!command) {
+            return false;
+        }
         memcpy(command, inputLine, len);
         command[len] = '\0';
 
@@ -642,12 +644,15 @@ void printResult(const Pcb *pcb)
 {
     if (pcb->processState == KILLED)
     {
-        printf("%-5d %-12s %-5u %-5u %-10s %-10s %-10s\n",
+        char killedMsg[30];
+        sprintf(killedMsg, "KILLED at %u", pcb->completionTime);
+
+        printf("%-5d %-12s %-5u %-5u %-15s %-10s %-10s\n",
                pcb->processId,
                pcb->processName,
                pcb->burstTime,
                pcb->ioDuration,
-               "KILLED",
+               killedMsg,
                "-",
                "-");
     }
@@ -656,7 +661,7 @@ void printResult(const Pcb *pcb)
         unsigned int turnaround = pcb->completionTime;
         unsigned int waiting = turnaround - pcb->burstTime;
 
-        printf("%-5d %-12s %-5u %-5u %-10s %-10u %-10u\n",
+        printf("%-5d %-12s %-5u %-5u %-15s %-10u %-10u\n",
                pcb->processId,
                pcb->processName,
                pcb->burstTime,
@@ -671,7 +676,7 @@ void displayTerminated(FCFS *details)
 {
     QueueNode *curr = details->terminatedQueueFront;
 
-    printf("%-5s %-12s %-5s %-5s %-10s %-10s %-10s\n",
+    printf("%-5s %-12s %-5s %-5s %-15s %-10s %-10s\n",
            "PID", "Name", "CPU", "IO", "Status", "Turnaround", "Waiting");
 
     while (curr)
@@ -753,8 +758,6 @@ int main()
         printf("Memory allocation failed!\n");
         return 1;
     }
-
-    printf("Executing FCFS:\n");
 
     bool schedularResponse = schedular(&details);
     if (!schedularResponse)
