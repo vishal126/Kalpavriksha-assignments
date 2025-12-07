@@ -145,52 +145,17 @@ bool checkForPcb(const FCFS *details, const unsigned int index, const int pId)
     return false;
 }
 
-HashNode *initializeAndPush(Pcb *pcbDetails, FCFS **details)
-{
-    HashNode *newNode = initializeHashNode(pcbDetails);
-    if (!newNode)
-    {
-        return NULL;
-    }
-
-    bool response = pushInReadyQueue(pcbDetails, details);
-    if (!response)
-    {
-        free(newNode);
-        return NULL;
-    }
-
-    return newNode;
-}
-
 bool insertInHashMap(Pcb *pcbDetails, FCFS **details)
 {
     unsigned int index = hashFunction(pcbDetails->processId, *details);
 
-    if ((*details)->hashMap[index] == NULL)
-    {
-        HashNode *newNodeToInsert = initializeAndPush(pcbDetails, details);
-        if (!newNodeToInsert)
-        {
-            return false;
-        }
-        (*details)->hashMap[index] = newNodeToInsert;
-    }
-    else
-    {
-        HashNode *secondNode = (*details)->hashMap[index]->next;
+    HashNode *newNode = initializeHashNode(pcbDetails);
+    if (!newNode) return false;
 
-        HashNode *newNodeToInsert = initializeAndPush(pcbDetails, details);
-        if (!newNodeToInsert)
-        {
-            return false;
-        }
-        (*details)->hashMap[index]->next = newNodeToInsert;
+    newNode->next = (*details)->hashMap[index];
+    (*details)->hashMap[index] = newNode;
 
-        newNodeToInsert->next = secondNode;
-    }
-
-    return true;
+    return pushInReadyQueue(pcbDetails, details);
 }
 
 bool insertKillValue(FCFS **details, const int processId, const unsigned int killTime)
@@ -399,14 +364,14 @@ bool readInput(FCFS **details)
 
         bool parseCommandResponse = parseCommand(inputLine, command, details);
 
-        if (!parseCommandResponse)
-        {
-            return false;
-        }
-
         if (rawLine != NULL)
             free(rawLine);
         free(command);
+
+        if (!parseCommandResponse)
+        {
+            return false;
+        }       
     }
 
     return true;
@@ -602,7 +567,6 @@ bool schedular(FCFS **details)
 
                 if (!pushToTerminatedQueue(details, currentProcess))
                 {
-                    free(currentProcess);
                     return false;
                 }
                 currentProcess = NULL;
@@ -624,7 +588,6 @@ bool schedular(FCFS **details)
 
                 if (!pushToTerminatedQueue(details, currentProcess))
                 {
-                    free(currentProcess);
                     return false;
                 }
                 currentProcess = NULL;
@@ -639,7 +602,7 @@ bool schedular(FCFS **details)
 
     return true;
 }
-
+// require some changes
 void printResult(const Pcb *pcb)
 {
     if (pcb->processState == KILLED)
