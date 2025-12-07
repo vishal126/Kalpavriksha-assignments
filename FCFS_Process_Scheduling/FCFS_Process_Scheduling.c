@@ -602,7 +602,7 @@ bool schedular(FCFS **details)
 
     return true;
 }
-// require some changes
+
 void printResult(const Pcb *pcb)
 {
     if (pcb->processState == KILLED)
