@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <windows.h>
 
-#define SLEEP_ONE_SECOND() Sleep(1000)
+#define TICK_MS 1000
 
 enum ProcessState
 {
@@ -18,7 +18,7 @@ enum ProcessState
 typedef struct Pcb
 {
     enum ProcessState processState;
-    int processId;
+    unsigned int processId;
     char *processName;
     unsigned int burstTime;
     unsigned int ioStartTime;
@@ -37,7 +37,7 @@ typedef struct QueueNode
 
 typedef struct HashNode
 {
-    int key;
+    unsigned int key;
     Pcb *pcbPointer;
     struct HashNode *next;
 } HashNode;
@@ -54,7 +54,7 @@ typedef struct FCFS
     unsigned int hashMapSize;
 } FCFS;
 
-unsigned int hashFunction(const int key, const FCFS *details)
+unsigned int hashFunction(const unsigned int key, const FCFS *details)
 {
     return (key % details->hashMapSize + details->hashMapSize) % details->hashMapSize;
 }
@@ -125,7 +125,7 @@ bool pushInReadyQueue(Pcb *pcbDetails, FCFS **details)
     return true;
 }
 
-bool checkForPcb(const FCFS *details, const unsigned int index, const int pId)
+bool checkForPcb(const FCFS *details, const unsigned int index, const unsigned int pId)
 {
     if (!details->hashMap[index])
         return false;
@@ -158,7 +158,7 @@ bool insertInHashMap(Pcb *pcbDetails, FCFS **details)
     return pushInReadyQueue(pcbDetails, details);
 }
 
-bool insertKillValue(FCFS **details, const int processId, const unsigned int killTime)
+bool insertKillValue(FCFS **details, const unsigned int processId, const unsigned int killTime)
 {
     unsigned int index = hashFunction(processId, *details);
 
@@ -174,7 +174,7 @@ bool insertKillValue(FCFS **details, const int processId, const unsigned int kil
         traversePtr = traversePtr->next;
     }
 
-    printf("No process exists with id %d!\n", processId);
+    printf("No process exists with id %u!\n", processId);
     return false;
 }
 
@@ -197,7 +197,7 @@ bool parseCommand(char *inputLine, char *command, FCFS **details)
 
     if (stricmp(command, "kill") == 0)
     {
-        if (sscanf(inputLine, "%s %d %u", tempPcb->processName, &tempPcb->processId, &tempPcb->killTime) != 3)
+        if (sscanf(inputLine, "%s %u %u", tempPcb->processName, &tempPcb->processId, &tempPcb->killTime) != 3)
         {
             printf("Wrong Input Format!\n");
             freeTempPcb(&tempPcb);
@@ -207,7 +207,7 @@ bool parseCommand(char *inputLine, char *command, FCFS **details)
 
         if ((*details)->hashMap[index] == NULL)
         {
-            printf("No process with id %d exists!", tempPcb->processId);
+            printf("No process with id %u exists!", tempPcb->processId);
             freeTempPcb(&tempPcb);
             return false;
         }
@@ -219,7 +219,7 @@ bool parseCommand(char *inputLine, char *command, FCFS **details)
     }
     else
     {
-        if (sscanf(inputLine, "%s %d %u %u %u", tempPcb->processName, &tempPcb->processId, &tempPcb->burstTime, &tempPcb->ioStartTime, &tempPcb->ioDuration) != 5)
+        if (sscanf(inputLine, "%s %u %u %u %u", tempPcb->processName, &tempPcb->processId, &tempPcb->burstTime, &tempPcb->ioStartTime, &tempPcb->ioDuration) != 5)
         {
             printf("Wrong Input Format!\n");
             freeTempPcb(&tempPcb);
@@ -234,7 +234,7 @@ bool parseCommand(char *inputLine, char *command, FCFS **details)
 
         if (checkForPcb(*details, hashFunction(tempPcb->processId, *details), tempPcb->processId))
         {
-            printf("Process with id %d already exists!\n", tempPcb->processId);
+            printf("Process with id %u already exists!\n", tempPcb->processId);
             freeTempPcb(&tempPcb);
             return true;
         }
@@ -357,6 +357,7 @@ bool readInput(FCFS **details)
         size_t len = strcspn(inputLine, " ");
         char *command = malloc(len + 1);
         if(!command) {
+            free(rawLine);
             return false;
         }
         memcpy(command, inputLine, len);
@@ -553,8 +554,8 @@ bool schedular(FCFS **details)
             break;
         }
 
+        Sleep(TICK_MS);
         currentTime++;
-        SLEEP_ONE_SECOND();
 
         if (currentProcess)
         {
@@ -610,7 +611,7 @@ void printResult(const Pcb *pcb)
         char killedMsg[30];
         sprintf(killedMsg, "KILLED at %u", pcb->completionTime);
 
-        printf("%-5d %-12s %-5u %-5u %-15s %-10s %-10s\n",
+        printf("%-5u %-12s %-5u %-5u %-15s %-10s %-10s\n",
                pcb->processId,
                pcb->processName,
                pcb->burstTime,
@@ -624,7 +625,7 @@ void printResult(const Pcb *pcb)
         unsigned int turnaround = pcb->completionTime;
         unsigned int waiting = turnaround - pcb->burstTime;
 
-        printf("%-5d %-12s %-5u %-5u %-15s %-10u %-10u\n",
+        printf("%-5u %-12s %-5u %-5u %-15s %-10u %-10u\n",
                pcb->processId,
                pcb->processName,
                pcb->burstTime,
@@ -732,4 +733,6 @@ int main()
     displayTerminated(details);
 
     freeMemory(&details);
+
+    return 0;
 }
