@@ -150,7 +150,8 @@ bool insertInHashMap(Pcb *pcbDetails, FCFS **details)
     unsigned int index = hashFunction(pcbDetails->processId, *details);
 
     HashNode *newNode = initializeHashNode(pcbDetails);
-    if (!newNode) return false;
+    if (!newNode)
+        return false;
 
     newNode->next = (*details)->hashMap[index];
     (*details)->hashMap[index] = newNode;
@@ -271,7 +272,7 @@ char *readLine()
         {
             size *= 2;
 
-            char *newBuffer = malloc(size);
+            char *newBuffer = realloc(buffer, size);
             if (!newBuffer)
             {
                 free(buffer);
@@ -356,7 +357,8 @@ bool readInput(FCFS **details)
 
         size_t len = strcspn(inputLine, " ");
         char *command = malloc(len + 1);
-        if(!command) {
+        if (!command)
+        {
             free(rawLine);
             return false;
         }
@@ -372,7 +374,7 @@ bool readInput(FCFS **details)
         if (!parseCommandResponse)
         {
             return false;
-        }       
+        }
     }
 
     return true;
