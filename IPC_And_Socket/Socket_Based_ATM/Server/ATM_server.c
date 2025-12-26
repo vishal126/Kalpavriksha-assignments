@@ -6,12 +6,15 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define PORT 8080
 #define ADDRESS "127.0.0.1"
 #define DB_FILE "../accountDB.txt"
 
 pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
+volatile sig_atomic_t serverRunning = 1;
+int serverId = -1;
 
 typedef enum command
 {
@@ -27,31 +30,49 @@ typedef struct ATMServer
     unsigned int amount;
 } ATMServer;
 
-int readBalance()
+int readBalance(int *balance)
 {
     FILE *fp = fopen(DB_FILE, "r");
-    int balance = 0;
-    if (fp)
+    if (!fp)
     {
-        fscanf(fp, "%d", &balance);
-        fclose(fp);
-    }
-    else
         perror("fopen");
+        return -1;
+    }
 
-    return balance;
+    if (fscanf(fp, "%d", balance) != 1)
+    {
+        fclose(fp);
+        fprintf(stderr, "Failed to read balance\n");
+        return -1;
+    }
+
+    fclose(fp);
+    return 0;
 }
 
-void writeBalance(unsigned int balance)
+int writeBalance(unsigned int balance)
 {
     FILE *fp = fopen(DB_FILE, "w");
-    if (fp)
+    if (!fp)
     {
-        fprintf(fp, "%d", balance);
-        fclose(fp);
-    }
-    else
         perror("fopen");
+        return -1;
+    }
+
+    if (fprintf(fp, "%u\n", balance) < 0)
+    {
+        perror("fprintf");
+        fclose(fp);
+        return -1;
+    }
+
+    if (fclose(fp) != 0)
+    {
+        perror("fclose");
+        return -1;
+    }
+
+    return 0;
 }
 
 void *handleClient(void *arg)
@@ -79,7 +100,15 @@ void *handleClient(void *arg)
 
         pthread_mutex_lock(&fileMutex);
 
-        int balance = readBalance();
+        int balance;
+        if (readBalance(&balance) == -1)
+        {
+            pthread_mutex_unlock(&fileMutex);
+            snprintf(response, sizeof(response),
+                     "Server error: unable to read account database");
+            send(clientId, response, strlen(response) + 1, 0);
+            break;
+        }
 
         switch (transaction.choice)
         {
@@ -89,14 +118,32 @@ void *handleClient(void *arg)
             else
             {
                 balance -= transaction.amount;
-                writeBalance(balance);
+                if (writeBalance(balance) == -1)
+                {
+                    pthread_mutex_unlock(&fileMutex);
+                    snprintf(response, sizeof(response),
+                             "Server error: failed to update account database");
+                    send(clientId, response, strlen(response) + 1, 0);
+                    break;
+                }
+
+                sprintf(response, "Deposit successful! New balance: %d", balance);
                 sprintf(response, "Withdrawal successful! New balance: %d", balance);
             }
             break;
 
         case DEPOSIT:
             balance += transaction.amount;
-            writeBalance(balance);
+            if (writeBalance(balance) == -1)
+            {
+                pthread_mutex_unlock(&fileMutex);
+                snprintf(response, sizeof(response),
+                         "Server error: failed to update account database");
+                send(clientId, response, strlen(response) + 1, 0);
+                break;
+            }
+
+            sprintf(response, "Deposit successful! New balance: %d", balance);
             sprintf(response, "Deposit successful! New balance: %d", balance);
             break;
 
@@ -121,9 +168,20 @@ void *handleClient(void *arg)
     return NULL;
 }
 
+void handleSignal(int sig)
+{
+    (void)sig;
+    serverRunning = 0;
+
+    if (serverId != -1)
+        close(serverId); // unblock accept()
+}
+
 int main()
 {
-    int serverId;
+    signal(SIGINT, handleSignal);
+    signal(SIGTERM, handleSignal);
+
     int opt = 1;
 
     if ((serverId = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -159,14 +217,23 @@ int main()
         return 1;
     }
 
-    while (1)
+    while (serverRunning)
     {
         int *clientId = malloc(sizeof(int));
+        if (!clientId)
+        {
+            printf("Memory allocation failed!\n");
+            continue;
+        }
         if ((*clientId = accept(serverId, (struct sockaddr *)&address, &addressLength)) < 0)
         {
+            free(clientId);
+
+            if (!serverRunning)
+                break;
+
             perror("accept");
-            close(serverId);
-            return 1;
+            continue;
         }
 
         printf("Connection Built.\n");
@@ -182,8 +249,8 @@ int main()
         pthread_detach(threadId);
     }
 
-    close(serverId);
     pthread_mutex_destroy(&fileMutex);
+    printf("Server shut down cleanly.\n");
 
     return 0;
 }

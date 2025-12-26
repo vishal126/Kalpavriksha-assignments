@@ -113,8 +113,7 @@ int main()
         return 1;
     }
 
-    int status;
-    if ((status = connect(clientId, (struct sockaddr *)&serverAddr, sizeof(serverAddr))) < 0)
+    if (connect(clientId, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
     {
         perror("connect");
         close(clientId);
@@ -137,7 +136,6 @@ int main()
             break;
         }
 
-        response[valRead] = '\0';
         printf("Server Response: %s\n", response);
     }
 

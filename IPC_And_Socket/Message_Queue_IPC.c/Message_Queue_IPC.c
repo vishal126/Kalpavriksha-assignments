@@ -48,7 +48,33 @@ void getArrayInput(int *arrayData, const unsigned int sizeOfArray)
 {
     for (unsigned int inputCounter = 0; inputCounter < sizeOfArray; inputCounter++)
     {
-        printf("enter %u element: ", inputCounter + 1);
+
+        char suffix[3];
+
+        if (inputCounter+1 == 1)
+        {
+            suffix[0] = 's';
+            suffix[1] = 't';
+        }
+        else if (inputCounter+1 == 2)
+        {
+            suffix[0] = 'n';
+            suffix[1] = 'd';
+        }
+        else if (inputCounter+1 == 3)
+        {
+            suffix[0] = 'r';
+            suffix[1] = 'd';
+        }
+        else
+        {
+            suffix[0] = 't';
+            suffix[1] = 'h';
+        }
+
+        suffix[2] = '\0';
+
+        printf("enter %u%s element: ", inputCounter + 1, suffix);
         arrayData[inputCounter] = getIntInput("");
     }
 }
@@ -116,9 +142,9 @@ int main()
 {
     message msg;
     msg.size = getIntInput("Enter size of Array: ");
-    if (msg.size > MAX)
+    if (msg.size > MAX || mas.size == 0)
     {
-        printf("Maximum allowed size is %d\n", MAX);
+        printf("Size is not in range 1 to %d\n", MAX);
         return 1;
     }
     msg.msgType = 1;

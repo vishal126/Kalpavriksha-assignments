@@ -43,7 +43,32 @@ bool getArrayInput(int **arrayData, const unsigned int sizeOfArray)
 
     for (unsigned int inputCounter = 0; inputCounter < sizeOfArray; inputCounter++)
     {
-        printf("enter %u element: ", inputCounter + 1);
+        char suffix[3];
+
+        if (inputCounter+1 == 1)
+        {
+            suffix[0] = 's';
+            suffix[1] = 't';
+        }
+        else if (inputCounter+1 == 2)
+        {
+            suffix[0] = 'n';
+            suffix[1] = 'd';
+        }
+        else if (inputCounter+1 == 3)
+        {
+            suffix[0] = 'r';
+            suffix[1] = 'd';
+        }
+        else
+        {
+            suffix[0] = 't';
+            suffix[1] = 'h';
+        }
+
+        suffix[2] = '\0';
+
+        printf("enter %u%s element: ", inputCounter + 1, suffix);
         (*arrayData)[inputCounter] = getIntInput("");
     }
 
@@ -99,9 +124,11 @@ int main() {
 
         qsort(arrayData, sizeOfArray, sizeof(int), compare);
 
-        if(write(pipeArray[1], arrayData, sizeOfArray*sizeof(int))==-1) {
+        ssize_t bytesWritten = write(pipeArray[1], arrayData, sizeOfArray*sizeof(int));
+        if(bytesWritten!=sizeOfArray*sizeof(int)) {
             printf("Write failed!\n");
             free(arrayData);
+            close(pipeArray[1]);
             return 1;
         }
 
@@ -120,10 +147,12 @@ int main() {
             free(arrayData);
             return 1;
         }
-
-        if(read(pipeArray[0], arrayData, sizeOfArray*sizeof(int))==-1) {
+        
+        ssize_t bytesRead = read(pipeArray[0], arrayData, sizeOfArray*sizeof(int));
+        if(bytesRead != sizeOfArray*sizeof(int)) {
             printf("Read failed!\n");
             free(arrayData);
+            close(pipeArray[1]);
             return 1;
         }
 

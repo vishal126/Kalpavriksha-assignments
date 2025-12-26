@@ -45,7 +45,32 @@ bool getArrayInput(int **arrayData, const unsigned int sizeOfArray)
 
     for (unsigned int inputCounter = 0; inputCounter < sizeOfArray; inputCounter++)
     {
-        printf("enter %u element: ", inputCounter + 1);
+        char suffix[3];
+
+        if (inputCounter+1 == 1)
+        {
+            suffix[0] = 's';
+            suffix[1] = 't';
+        }
+        else if (inputCounter+1 == 2)
+        {
+            suffix[0] = 'n';
+            suffix[1] = 'd';
+        }
+        else if (inputCounter+1 == 3)
+        {
+            suffix[0] = 'r';
+            suffix[1] = 'd';
+        }
+        else
+        {
+            suffix[0] = 't';
+            suffix[1] = 'h';
+        }
+
+        suffix[2] = '\0';
+
+        printf("enter %u%s element: ", inputCounter + 1, suffix);
         (*arrayData)[inputCounter] = getIntInput("");
     }
 
@@ -94,7 +119,7 @@ void printArray(const char *msg, const int *arrayData, const unsigned int sizeOf
     for (unsigned int printCounter = 0; printCounter < sizeOfArray; printCounter++)
         printf("%d ", arrayData[printCounter]);
 
-    printf("\n\n");;
+    printf("\n\n");
 }
 
 int main()
@@ -151,8 +176,11 @@ int main()
         printf("Sorting...\n");
 
         qsort(shmPtr, sizeOfArray, sizeof(int), compare); 
-        if (shmdt(shmPtr) == -1)
+        free(arrayData);
+        if (shmdt(shmPtr) == -1) {
             perror("shmdt");
+            return 1;
+        }
 
         return 0;
     }
