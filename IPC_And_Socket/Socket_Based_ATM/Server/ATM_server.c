@@ -110,25 +110,30 @@ void *handleClient(void *arg)
             break;
         }
 
+        int fatalError = 0;
+
         switch (transaction.choice)
         {
         case WITHDRAW:
             if (transaction.amount > balance)
-                sprintf(response, "Withdrawal failed! Insufficient balance.");
+            {
+                snprintf(response, sizeof(response),
+                         "Withdrawal failed! Insufficient balance.");
+            }
             else
             {
                 balance -= transaction.amount;
                 if (writeBalance(balance) == -1)
                 {
-                    pthread_mutex_unlock(&fileMutex);
                     snprintf(response, sizeof(response),
                              "Server error: failed to update account database");
-                    send(clientId, response, strlen(response) + 1, 0);
-                    break;
+                    fatalError = 1;
                 }
-
-                sprintf(response, "Deposit successful! New balance: %d", balance);
-                sprintf(response, "Withdrawal successful! New balance: %d", balance);
+                else
+                {
+                    snprintf(response, sizeof(response),
+                             "Withdrawal successful! New balance: %d", balance);
+                }
             }
             break;
 
@@ -136,23 +141,23 @@ void *handleClient(void *arg)
             balance += transaction.amount;
             if (writeBalance(balance) == -1)
             {
-                pthread_mutex_unlock(&fileMutex);
                 snprintf(response, sizeof(response),
                          "Server error: failed to update account database");
-                send(clientId, response, strlen(response) + 1, 0);
-                break;
+                fatalError = 1;
             }
-
-            sprintf(response, "Deposit successful! New balance: %d", balance);
-            sprintf(response, "Deposit successful! New balance: %d", balance);
+            else
+            {
+                snprintf(response, sizeof(response),
+                         "Deposit successful! New balance: %d", balance);
+            }
             break;
 
         case DISPLAY:
-            sprintf(response, "Current balance: %d", balance);
+            snprintf(response, sizeof(response), "Current balance: %d", balance);
             break;
 
         default:
-            sprintf(response, "Invalid request.");
+            snprintf(response, sizeof(response), "Invalid request.");
         }
 
         pthread_mutex_unlock(&fileMutex);
@@ -162,6 +167,9 @@ void *handleClient(void *arg)
             perror("send");
             break;
         }
+        
+        if (fatalError)
+            break;
     }
 
     close(clientId);
